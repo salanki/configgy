@@ -369,7 +369,7 @@ object Logger {
 
     val logger = Logger.get(config.getString("node", ""))
     if (!validateOnly && allowNestedBlocks) {
-      for (val handler <- logger.getHandlers) {
+      for (handler <- logger.getHandlers) {
         logger.removeHandler(handler)
       }
     }
@@ -398,7 +398,7 @@ object Logger {
     }
 
     // options for using a logfile
-    for (val filename <- config.getString("filename")) {
+    for (filename <- config.getString("filename")) {
       // i bet there's an easier way to do this.
       val policy = config.getString("roll", "never").toLowerCase match {
         case "never" => Never
@@ -439,7 +439,7 @@ object Logger {
       }
     }
 
-    for (val handler <- handlers) {
+    for (handler <- handlers) {
       level.map { handler.setLevel(_) }
       handler.useUtc = config.getBool("utc", false)
       handler.truncateAt = config.getInt("truncate", 0)

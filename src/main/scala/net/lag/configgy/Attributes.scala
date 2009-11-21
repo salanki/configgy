@@ -56,7 +56,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
       case None => ""
     })
     buffer ++= ": "
-    for (val key <- sortedKeys) {
+    for (key <- sortedKeys) {
       buffer ++= key
       buffer ++= "="
       buffer ++= (cells(key) match {
@@ -292,12 +292,12 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 
   def asMap: Map[String, String] = {
     var ret = immutable.Map.empty[String, String]
-    for (val (key, value) <- cells) {
+    for ((key, value) <- cells) {
       value match {
         case StringCell(x) => ret = ret.update(key, x)
         case StringListCell(x) => ret = ret.update(key, x.mkString("[", ",", "]"))
         case AttributesCell(x) =>
-          for (val (k, v) <- x.asMap) {
+          for ((k, v) <- x.asMap) {
             ret = ret.update(key + "." + k, v)
           }
       }
@@ -373,7 +373,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
     }
 
     monitored = true
-    for (val cell <- cells.values) {
+    for (cell <- cells.values) {
       cell match {
         case AttributesCell(x) => x.setMonitored
         case _ => // pass
@@ -393,7 +393,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
       case Some(a: Attributes) => a.copyInto(attr)
       case _ =>
     }
-    for (val (key, value) <- cells.elements) {
+    for ((key, value) <- cells.elements) {
       value match {
         case StringCell(x) => attr(key) = x
         case StringListCell(x) => attr(key) = x
