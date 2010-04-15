@@ -132,22 +132,24 @@ class SyslogHandler(useIsoDateFormat: Boolean, server: String) extends Handler(n
 
   def clearServerName = formatter.clearServerName
 
-  def publish(record: javalog.LogRecord) = NonBlockingSyslog send record
+  def publish(record: javalog.LogRecord) = {
+    val data = formatter.format(record).getBytes
+    val packet = new DatagramPacket(data, data.length, dest)
+    NonBlockingSyslog.send (() => socket.send(packet))
+  }
 }
 
 object NonBlockingSyslog {
-  def send (record: javalog.LogRecord) = writer ! record
+  def send (action: () => Unit) = writer !  action
+  def block                     = writer !? Wait
+
+  private case object Wait
 
   private lazy val writer = actor {
     while (true) receive {
-      case x: javalog.LogRecord => try {
-                                     val data = getFormatter.format(record).getBytes
-                                     val packet = new DatagramPacket(data, data.length, dest)
-                                     socket.send(packet)
-                                   } catch {
-                                     case e =>
-                                       System.err.println(Formatter.formatStackTrace(e, 30).mkString("\n"))
-                                   }
+      case Wait                 => reply (())
+      case action: (() => Unit) => try   {action ()}
+                                   catch {case e => System.err.println(Formatter.formatStackTrace(e, 30).mkString("\n"))}
     }
   }
 }
