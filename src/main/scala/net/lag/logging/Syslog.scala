@@ -136,7 +136,7 @@ class SyslogHandler(useIsoDateFormat: Boolean, server: String) extends Handler(n
 }
 
 object NonBlockingSyslog {
-  val send = writer ! _
+  def send (record: javalog.LogRecord) = writer ! record
 
   private lazy val writer = actor {
     while (true) receive {
