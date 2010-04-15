@@ -16,6 +16,9 @@
 
 package net.lag.logging
 
+import scala.actors.Actor._
+import scala.actors._
+
 import java.util.{logging => javalog}
 import java.net.{DatagramPacket, DatagramSocket, InetAddress, InetSocketAddress, SocketAddress}
 import java.text.SimpleDateFormat
@@ -129,14 +132,22 @@ class SyslogHandler(useIsoDateFormat: Boolean, server: String) extends Handler(n
 
   def clearServerName = formatter.clearServerName
 
-  def publish(record: javalog.LogRecord) = synchronized {
-    try {
-      val data = getFormatter.format(record).getBytes
-      val packet = new DatagramPacket(data, data.length, dest)
-      socket.send(packet)
-    } catch {
-      case e =>
-        System.err.println(Formatter.formatStackTrace(e, 30).mkString("\n"))
+  def publish(record: javalog.LogRecord) = NonBlockingSyslog send record
+}
+
+object NonBlockingSyslog {
+  val send = writer ! _
+
+  private lazy val writer = actor {
+    while (true) receive {
+      case x: javalog.LogRecord => try {
+                                     val data = getFormatter.format(record).getBytes
+                                     val packet = new DatagramPacket(data, data.length, dest)
+                                     socket.send(packet)
+                                   } catch {
+                                     case e =>
+                                       System.err.println(Formatter.formatStackTrace(e, 30).mkString("\n"))
+                                   }
     }
   }
 }
