@@ -1,4 +1,5 @@
 import sbt._
+import com.twitter.sbt.StandardProject
 
 
 class ConfiggyProject(info: ProjectInfo) extends StandardProject(info) {
