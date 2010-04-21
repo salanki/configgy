@@ -42,6 +42,8 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 
   def keys: Iterator[String] = cells.keys
 
+  def getName() = name
+
   override def toString() = {
     val buffer = new StringBuilder("{")
     buffer ++= name
