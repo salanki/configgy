@@ -187,6 +187,7 @@ class ConfigSpec extends Specification with TestHelper {
       c("oranges") mustEqual "17"
       c("fruit.misc") mustEqual "x,y,z"
       c.toString mustEqual "{: apples=\"23\" fruit={fruit: misc=\"x,y,z\" } oranges=\"17\" }"
+      c.configMap("fruit").getName mustEqual "fruit"
     }
 
     "register jmx" in {

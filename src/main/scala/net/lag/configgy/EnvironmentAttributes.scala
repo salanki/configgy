@@ -45,6 +45,8 @@ private[configgy] object EnvironmentAttributes extends ConfigMap {
     map
   }
 
+  def getName() = ""
+
   def getString(key: String): Option[String] = {
     getSystemProperties().get(key).orElse(env.get(key))
   }
