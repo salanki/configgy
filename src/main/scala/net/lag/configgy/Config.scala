@@ -312,7 +312,6 @@ class Config extends ConfigMap {
   def inheritFrom = root.inheritFrom
   def inheritFrom_=(config: Option[ConfigMap]) = root.inheritFrom=(config)
   def getName(): String = root.name
-
 }
 
 
