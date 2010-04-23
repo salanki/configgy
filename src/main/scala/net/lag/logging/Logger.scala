@@ -251,11 +251,15 @@ object Logger {
    */
   def clearHandlers() = {
     for (logger <- elements) {
-      for (handler <- logger.getHandlers) {
-        try {
-          handler.close()
-        } catch { case _ => () }
-        logger.removeHandler(handler)
+      // some custom Logger implementations may return null from getHandlers
+      val handlers = logger.getHandlers()
+      if (handlers ne null) {
+        for (handler <- logger.getHandlers) {
+          try {
+            handler.close()
+          } catch { case _ => () }
+          logger.removeHandler(handler)
+        }
       }
       logger.setLevel(null)
     }
