@@ -394,18 +394,19 @@ object LoggingSpec extends Specification with TestHelper {
         val TEST_DATA =
           "node=\"net.lag\"\n" +
           "syslog_host=\"example.com:212\"\n" +
-          "syslog_server_name=\"elmo\"\n"
+          "syslog_server_name=\"elmo\"\n" +
+          "syslog_priority=128\n"
 
         val c = new Config
         c.load(TEST_DATA)
         val log = Logger.configure(c, false, true)
 
         log.getHandlers.length mustEqual 1
-        val h = log.getHandlers()(0)
-        h.isInstanceOf[SyslogHandler] mustEqual true
-        h.asInstanceOf[SyslogHandler].dest.asInstanceOf[InetSocketAddress].getHostName mustEqual "example.com"
-        h.asInstanceOf[SyslogHandler].dest.asInstanceOf[InetSocketAddress].getPort mustEqual 212
-        h.asInstanceOf[SyslogHandler].serverName mustEqual "elmo"
+        val h = log.getHandlers()(0).asInstanceOf[SyslogHandler]
+        h.dest.asInstanceOf[InetSocketAddress].getHostName mustEqual "example.com"
+        h.dest.asInstanceOf[InetSocketAddress].getPort mustEqual 212
+        h.serverName mustEqual "elmo"
+        h.priority mustEqual 128
       }
     }
 
