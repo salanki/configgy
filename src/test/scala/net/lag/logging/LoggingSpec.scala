@@ -345,6 +345,8 @@ object LoggingSpec extends Specification with TestHelper {
       syslog.clearServerName
       log.debug("and debug!")
 
+      NonBlockingSyslog.block
+
       val p = new DatagramPacket(new Array[Byte](1024), 1024)
       serverSocket.receive(p)
       new String(p.getData, 0, p.getLength) mustEqual "<9>2008-03-29T05:53:16 raccoon.local whiskey: fatal message!"
@@ -360,6 +362,7 @@ object LoggingSpec extends Specification with TestHelper {
       log.addHandler(syslog)
       log.info("here's an info message with BSD time.")
       serverSocket.receive(p)
+      NonBlockingSyslog.block
       new String(p.getData, 0, p.getLength) mustEqual "<14>Mar 29 05:53:16 raccoon.local whiskey: here's an info message with BSD time."
     }
 
