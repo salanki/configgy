@@ -46,6 +46,11 @@ flexibility of java logging, but making it easy to do the common case of
 creating a single logfile with one debug level.
 
 
+## Building
+
+    $ ant
+
+
 ## Quick Start
 
 This is all you need to know to use the library:
@@ -490,6 +495,9 @@ with a cleaner interface.
 
 
 ## Contact
+
+There's a mailing list for configgy development: <configgy@googlegroups.com>.
+You can subscribe here: http://groups.google.com/group/configgy
 
 Configgy was written by Robey Pointer <robeypointer@gmail.com> and is licensed
 under the Apache 2 license (included). Please write me with questions or
