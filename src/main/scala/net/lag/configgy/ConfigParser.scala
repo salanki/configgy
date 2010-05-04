@@ -58,7 +58,7 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
       case "=" => true
       case "?=" => ! attr.contains(prefix + k)
     }) v match {
-      case x: Int => attr(prefix + k) = x
+      case x: Long => attr(prefix + k) = x
       case x: String => attr(prefix + k) = x
       case x: Array[String] => attr(prefix + k) = x
       case x: Boolean => attr(prefix + k) = x
@@ -106,7 +106,7 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
 
 
   def value: Parser[Any] = number | string | stringList | trueFalse
-  def number = numberToken ^^ { x => if (x.contains('.')) x else x.toInt }
+  def number = numberToken ^^ { x => if (x.contains('.')) x else x.toLong }
   def string = "\"" ~> stringToken <~ "\"" ^^ { s => attr.interpolate(prefix, s.unquoteC) }
   def stringList = "[" ~> repsep(string | numberToken, opt(",")) <~ (opt(",") ~ "]") ^^ { list => list.toArray }
   def trueFalse: Parser[Boolean] = ("(true|on)".r ^^ { x => true }) | ("(false|off)".r ^^ { x => false })
