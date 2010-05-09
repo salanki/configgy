@@ -45,12 +45,17 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
   val tagNameToken: Parser[String] = """[a-zA-Z][-\w]*""".r
 
 
-  def root = rep(includeFile | assignment | toggle | sectionOpen | sectionClose |
+  def root = rep(includeFile | includeOptFile | assignment | toggle | sectionOpen | sectionClose |
                  sectionOpenBrace | sectionCloseBrace)
 
   def includeFile = "include" ~> string ^^ {
     case filename: String =>
       new ConfigParser(attr.makeAttributes(sections.mkString(".")), importer) parse importer.importFile(filename)
+  }
+
+  def includeOptFile = "include?" ~> string ^^ {
+    case filename: String =>
+      new ConfigParser(attr.makeAttributes(sections.mkString(".")), importer) parse importer.importFile(filename, false)
   }
 
   def assignment = identToken ~ assignToken ~ value ^^ {
