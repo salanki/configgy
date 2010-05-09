@@ -23,7 +23,7 @@ import net.lag.extensions._
 class ConfigParserSpec extends Specification {
 
   class FakeImporter extends Importer {
-    def importFile(filename: String): String = {
+    def importFile(filename: String, required: Boolean): String = {
       filename match {
         case "test1" =>
           "staff = \"weird skull\"\n"
@@ -38,6 +38,8 @@ class ConfigParserSpec extends Specification {
           "cat ?= \"blah\"\n"
         case "test4" =>
           "cow=\"moo\"\n"
+        case "test5" =>
+          if (!required) "" else throw new ParseException("File not found")
       }
     }
   }
@@ -146,6 +148,33 @@ class ConfigParserSpec extends Specification {
         "include \"test2\"\n" +
         "include \"test4\"\n"
       parse(data2).toString mustEqual "{: cow=\"moo\" inner={inner: cat=\"meow\" dog=\"bark\" } toplevel=\"hat\" }"
+    }
+
+    "import optional files" in {
+      val data1 =
+        "toplevel=\"skeletor\"\n" +
+        "<inner>\n" +
+        "    include? \"test1\"\n" +
+        "    home = \"greyskull\"\n" +
+        "</inner>\n"
+      parse(data1).toString mustEqual "{: inner={inner: home=\"greyskull\" staff=\"weird skull\" } toplevel=\"skeletor\" }"
+
+      val data2 =
+        "toplevel=\"hat\"\n" +
+        "include? \"test2\"\n" +
+        "include \"test4\"\n" +
+        "include? \"test5\"\n"
+      parse(data2).toString mustEqual "{: cow=\"moo\" inner={inner: cat=\"meow\" dog=\"bark\" } toplevel=\"hat\" }"
+    }
+
+    "throw an exception when importing non-existent file" in {
+      val data1 = "include \"test5\"\n"
+      parse(data1) must throwA(new ParseException("File not found"))
+    }
+
+    "ignore optionally imported non-existent file" in {
+      val data1 = "include? \"test5\"\n"
+      parse(data1).toString mustEqual "{: }"
     }
 
     "refuse to overload key types" in {
