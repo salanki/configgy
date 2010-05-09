@@ -39,7 +39,7 @@ trait Importer {
    * If the file couldn't be imported, throws a `ParseException`.
    */
   @throws(classOf[ParseException])
-  def importFile(filename: String) : String = importFile(filename, true)
+  def importFile(filename: String): String = importFile(filename, true)
 
   private val BUFFER_SIZE = 8192
 
@@ -78,10 +78,12 @@ class FilesystemImporter(val baseFolder: String) extends Importer {
     }
     if (!required && !f.exists) {
       ""
-    } else try {
-      streamToString(new FileInputStream(f))
-    } catch {
-      case x => throw new ParseException(x.toString)
+    } else {
+      try {
+        streamToString(new FileInputStream(f))
+      } catch {
+        case x => throw new ParseException(x.toString)
+      }
     }
   }
 }
@@ -98,11 +100,11 @@ class ResourceImporter(classLoader: ClassLoader) extends Importer {
       if (stream eq null) {
         if (required) {
           throw new ParseException("Can't find resource: " + filename)
-        } else {
-          return ""
         }
+        ""
+      } else {
+        streamToString(stream)
       }
-      streamToString(stream)
     } catch {
       case x => throw new ParseException(x.toString)
     }
