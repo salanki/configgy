@@ -463,5 +463,18 @@ class ConfigParserSpec extends Specification {
       a.configMap("atlanta.beer").inheritFrom.get.toString mustMatch "sanfrancisco\\.beer.*"
       a.getString("sanfrancisco.beer.deathandtaxes.etc") mustEqual None
     }
+
+    "don't choke on poundsign in strings" in {
+      val data =
+        "irc {\n" +
+        "  channel = \"#turtle\"\n" +
+        "  server = \"irc.example.com\"\n" +
+        "  username = \"user\"\n" +
+        "  password = \"pass\"\n" +
+        "}\n"
+      val a = parse(data)
+      a("irc.channel") mustEqual "#turtle"
+      a("irc.server") mustEqual "irc.example.com"
+    }
   }
 }
