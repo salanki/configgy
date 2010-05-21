@@ -27,7 +27,10 @@ import net.lag.extensions._
  * during parsing. The `reason` string will contain the parsing
  * error details.
  */
-class ParseException(reason: String) extends Exception(reason)
+class ParseException(reason: String, cause: Throwable) extends Exception(reason, cause) {
+	def this(reason: String) = this(reason, null)
+	def this(cause: Throwable) = this(null, cause)
+}
 
 
 private[configgy] class ConfigParser(var attr: Attributes, val importer: Importer) extends RegexParsers {
