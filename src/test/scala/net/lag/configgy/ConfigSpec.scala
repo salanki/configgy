@@ -198,5 +198,29 @@ class ConfigSpec extends Specification with TestHelper {
       mbs.getAttribute(new jmx.ObjectName("com.example.test:type=Config,name=(root)"), "oranges") mustEqual "17"
       mbs.getAttribute(new jmx.ObjectName("com.example.test:type=Config,name=fruit"), "misc") mustEqual "x,y,z"
     }
+
+    "reload from string" in {
+      val c = Config.fromString("""apples="23" oranges="17" basket { apples = true oranges = false }""")
+      c("apples") mustEqual "23"
+      c("oranges") mustEqual "17"
+      c("basket.apples", false) mustEqual true
+      c("basket.oranges", false) mustEqual false
+      c.setString("apples", "red")
+      c.configMap("basket").setBool("apples", false)
+      c("apples") mustEqual "red"
+      c("basket.apples", false) mustEqual false
+      c.reload()
+      c("apples") mustEqual "23"
+      c("basket.apples", false) mustEqual true
+    }
+    
+    "reload from a file" in {
+      val c = Config.fromResource("happy.conf", getClass.getClassLoader)
+      c.getInt("commie") mustEqual Some(501)
+      c.setInt("commie", 401)
+      c.getInt("commie") mustEqual Some(401)
+      c.reload()
+      c.getInt("commie") mustEqual Some(501)
+    }
   }
 }
