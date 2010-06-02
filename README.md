@@ -148,7 +148,7 @@ as if they were in C structs, using dotted-name notation. So the above config is
 
 ### Logging
 
-Logging is configured in a special `<log>` block. The main logging options
+Logging is configured in a special `log` block. The main logging options
 are described below.
 
 - `filename` -
