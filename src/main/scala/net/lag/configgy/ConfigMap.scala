@@ -332,6 +332,8 @@ trait ConfigMap {
    */
   def toConfigString: String
 
+  def copyInto[T <: ConfigMap](configMap: T): T
+
   def copyInto(obj: AnyRef) {
     val cls = obj.getClass
     val log = Logger.get(cls)

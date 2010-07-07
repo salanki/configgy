@@ -83,8 +83,8 @@ private class SubscriptionNode {
       case Nil => nextNodes = map.elements
       case segment :: _ => {
         map.get(segment) match {
-            case None => return     // done!
-            case Some(node) => nextNodes = Iterator.single((segment, node))
+          case None => return     // done!
+          case Some(node) => nextNodes = Iterator.single((segment, node))
         }
       }
     }
@@ -119,7 +119,7 @@ class Config extends ConfigMap {
   private var jmxNodes: List[String] = Nil
   private var jmxPackageName: String = ""
   private var jmxSubscriptionKey: Option[SubscriptionKey] = None
-  private var reloadAction: Option[()=>Unit] = None
+  private var reloadAction: Option[() => Unit] = None
 
 
   /**
@@ -323,6 +323,7 @@ class Config extends ConfigMap {
   def asMap(): Map[String, String] = root.asMap()
   def toConfigString = root.toConfigString
   def copy(): ConfigMap = root.copy()
+  def copyInto[T <: ConfigMap](m: T): T = root.copyInto(m)
   def inheritFrom = root.inheritFrom
   def inheritFrom_=(config: Option[ConfigMap]) = root.inheritFrom=(config)
   def getName(): String = root.name

@@ -111,6 +111,20 @@ class ConfigSpec extends Specification with TestHelper {
       c.toString mustEqual "{: alpha={alpha: beta={alpha.beta: gamma=\"hello\" } giraffe=\"tall!\" } }"
     }
 
+    "track changes to a ConfigMap that's tacked on" in {
+      val c = new Config
+      val sub = new MemorySubscriber
+      c.subscribe(sub)
+
+      val hostsConfig = new Config
+      c.setConfigMap("hosts", hostsConfig)
+      sub.used mustEqual true
+      sub.used = false
+
+      c.getConfigMap("hosts").get.setString("localhost", "awesome")
+      sub.used mustEqual true
+    }
+
     "deal correctly with multiple subscribers at different nodes" in {
       val c = new Config
       c("alpha.beta.gamma") = "hello"
@@ -213,7 +227,7 @@ class ConfigSpec extends Specification with TestHelper {
       c("apples") mustEqual "23"
       c("basket.apples", false) mustEqual true
     }
-    
+
     "reload from a file" in {
       val c = Config.fromResource("happy.conf", getClass.getClassLoader)
       c.getInt("commie") mustEqual Some(501)

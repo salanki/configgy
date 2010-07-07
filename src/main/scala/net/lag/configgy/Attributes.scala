@@ -39,6 +39,10 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
   private var monitored = false
   var inheritFrom: Option[ConfigMap] = None
 
+  def this(config: Config, name: String, copyFrom: ConfigMap) = {
+    this(config, name)
+    copyFrom.copyInto(this)
+  }
 
   def keys: Iterator[String] = cells.keys
 
@@ -250,14 +254,16 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 
     recurse(key) match {
       case Some((attr, name)) => attr.setConfigMap(name, value)
-      case None => cells.get(key) match {
-        case Some(AttributesCell(_)) =>
-          cells.put(key, new AttributesCell(value.copy.asInstanceOf[Attributes]))
-        case None =>
-          cells.put(key, new AttributesCell(value.copy.asInstanceOf[Attributes]))
-        case _ =>
-          throw new ConfigException("Illegal key " + key)
-      }
+      case None =>
+        val subName = if (name == "") key else (name + "." + key)
+        cells.get(key) match {
+          case Some(AttributesCell(_)) =>
+            cells.put(key, new AttributesCell(new Attributes(config, subName, value)))
+          case None =>
+            cells.put(key, new AttributesCell(new Attributes(config, subName, value)))
+          case _ =>
+            throw new ConfigException("Illegal key " + key)
+        }
     }
   }
 
@@ -379,21 +385,19 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 
   // make a deep copy of the Attributes tree.
   def copy(): Attributes = {
-    copyTo(new Attributes(config, name))
+    copyInto(new Attributes(config, name))
   }
 
-  private def copyTo(attr: Attributes): Attributes = {
+  def copyInto[T <: ConfigMap](attr: T): T = {
     inheritFrom match {
-      case Some(a: Attributes) => a.copyTo(attr)
+      case Some(a: Attributes) => a.copyInto(attr)
       case _ =>
     }
     for (val (key, value) <- cells.elements) {
       value match {
         case StringCell(x) => attr(key) = x
         case StringListCell(x) => attr(key) = x
-        case AttributesCell(x) =>
-          val xattr = x.copy()
-          attr.cells += (key -> new AttributesCell(xattr))
+        case AttributesCell(x) => attr.setConfigMap(key, x.copy())
       }
     }
     attr

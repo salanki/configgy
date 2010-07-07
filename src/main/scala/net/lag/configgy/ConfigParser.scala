@@ -28,8 +28,8 @@ import net.lag.extensions._
  * error details.
  */
 class ParseException(reason: String, cause: Throwable) extends Exception(reason, cause) {
-	def this(reason: String) = this(reason, null)
-	def this(cause: Throwable) = this(null, cause)
+  def this(reason: String) = this(reason, null)
+  def this(cause: Throwable) = this(null, cause)
 }
 
 
