@@ -200,9 +200,9 @@ class AttributesSpec extends Specification {
       s("name") = "Sparky"
       sub("name") = "Muffy"
       s.setConfigMap("dog", sub)
-      s.toString mustEqual "{: dog={: name=\"Muffy\" } name=\"Sparky\" }"
+      s.toString mustEqual "{: dog={dog: name=\"Muffy\" } name=\"Sparky\" }"
       sub("age") = 10
-      s.toString mustEqual "{: dog={: name=\"Muffy\" } name=\"Sparky\" }"
+      s.toString mustEqual "{: dog={dog: name=\"Muffy\" } name=\"Sparky\" }"
     }
 
     "toConfigString" in {
