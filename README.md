@@ -45,6 +45,9 @@ using the simple config format to setup logging, too -- allowing most of the
 flexibility of java logging, but making it easy to do the common case of
 creating a single logfile with one debug level.
 
+Notnoop has posted an SLF4J plugin for configgy, if you use SLF4J:
+http://github.com/notnoop/slf4j-configgy/
+
 
 ## Building
 
@@ -217,7 +220,6 @@ Tuesday morning.
 None of `filename`, `console`, or `syslog_host` are mutually exclusive,
 so you can define any or all of those targets, to have log messages sent to
 any possible combination of places.
-
 
 ## Advanced Features
 
