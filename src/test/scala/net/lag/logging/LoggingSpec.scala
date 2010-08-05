@@ -22,6 +22,7 @@ import _root_.java.util.{Calendar, Date, TimeZone, logging => javalog}
 import _root_.org.specs._
 import _root_.net.lag.configgy.Config
 import _root_.net.lag.extensions._
+import _root_.sun.misc.Signal
 
 
 object Crazy {
@@ -66,16 +67,21 @@ class TimeWarpingSyslogHandler(useIsoDateFormat: Boolean, server: String) extend
 }
 
 
-class ImmediatelyRollingFileHandler(filename: String, policy: Policy, append: Boolean)
-      extends FileHandler(filename, policy, new FileFormatter, append) {
+class TimeWarpingFileHandler(filename: String, policy: Policy, append: Boolean) 
+  extends FileHandler(filename, policy, new FileFormatter, append) {
   formatter.timeZone = "GMT"
-
-  override def computeNextRollTime(): Long = System.currentTimeMillis + 100
 
   override def publish(record: javalog.LogRecord) = {
     record.setMillis(1206769996722L)
     super.publish(record)
   }
+}
+
+class ImmediatelyRollingFileHandler(filename: String, policy: Policy, append: Boolean)
+      extends TimeWarpingFileHandler(filename, policy, append) {
+  formatter.timeZone = "GMT"
+
+  override def computeNextRollTime(): Long = System.currentTimeMillis + 100
 }
 
 
@@ -237,6 +243,27 @@ object LoggingSpec extends Specification with TestHelper {
         val f2 = new BufferedReader(new InputStreamReader(new FileInputStream(folderName +
           "/test.log")))
         f2.readLine mustEqual "FAT [20080329-05:53:16.722] whiskey: first line."
+      }
+    }
+
+    "respond to a sighup to reopen a logfile" in {
+      withTempFolder {
+        val handler = new TimeWarpingFileHandler(folderName + "/new.log", Never, true)
+        val log = Logger.get("net.lag.cerveza.Tecate")
+        log.addHandler(handler)
+
+        val logFile = new File(folderName, "new.log")
+        logFile.renameTo(new File(folderName, "old.log"))
+        log.fatal("should be in old file")
+        Signal.raise(new Signal("HUP"))
+        val newLogFile = new File(folderName, "new.log")
+        newLogFile.exists() must eventually(be_==(true))
+        log.fatal("should be in new file")
+
+        val oldReader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(folderName, "old.log"))))
+        oldReader.readLine mustEqual "FAT [20080329-05:53:16.722] cerveza: should be in old file"
+        val newReader = new BufferedReader(new InputStreamReader(new FileInputStream(newLogFile)))
+        newReader.readLine mustEqual "FAT [20080329-05:53:16.722] cerveza: should be in new file"
       }
     }
 

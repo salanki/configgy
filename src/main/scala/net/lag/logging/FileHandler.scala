@@ -34,12 +34,21 @@ case class Weekly(dayOfWeek: Int) extends Policy
  */
 class FileHandler(val filename: String, val policy: Policy, formatter: Formatter,
                   val append: Boolean) extends Handler(formatter) {
-
   private var stream: Writer = null
   private var openTime: Long = 0
   private var nextRollTime: Long = 0
   openLog()
 
+  HandleSignal("HUP") { signal =>
+    println("Received SIGHUP. Re-opening log: " + filename)
+    val oldStream = stream
+    synchronized {
+      stream = openWriter()
+    }
+    try {
+      oldStream.close()
+    } catch { case _ => () }
+  }
 
   def flush() = {
     stream.flush()
@@ -52,10 +61,14 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
     } catch { case _ => () }
   }
 
-  private def openLog() = {
+  private def openWriter() = {
     val dir = new File(filename).getParentFile
     if ((dir ne null) && !dir.exists) dir.mkdirs
-    stream = new OutputStreamWriter(new FileOutputStream(filename, append), "UTF-8")
+    new OutputStreamWriter(new FileOutputStream(filename, append), "UTF-8")
+  }
+
+  private def openLog() = {
+    stream = openWriter()
     openTime = System.currentTimeMillis
     nextRollTime = computeNextRollTime()
   }
