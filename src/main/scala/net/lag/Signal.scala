@@ -16,7 +16,6 @@ object HandleSignal {
   }
 
   def apply(posixSignal: String)(f: Signal => Unit) {
-println("setting handler!")
     val signal = new Signal(posixSignal)
     if (!handlers.contains(signal)) {
       Signal.handle(new Signal(posixSignal), Handler)

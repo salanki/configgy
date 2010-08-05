@@ -40,7 +40,6 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
   openLog()
 
   HandleSignal("HUP") { signal =>
-    println("Received SIGHUP. Re-opening log: " + filename)
     val oldStream = stream
     synchronized {
       stream = openWriter()
