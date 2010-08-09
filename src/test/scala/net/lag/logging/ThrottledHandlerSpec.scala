@@ -21,11 +21,10 @@ import _root_.org.specs._
 object ThrottledLoggerSpec extends Specification with TestHelper {
   private var handler: Handler = null
 
-  "ThrottledLogger" should {
+  "ThrottledHandler" should {
     doBefore {
       Logger.clearHandlers
       handler = new StringHandler(new GenericFormatter(""))
-      Logger.get("").addHandler(handler)
     }
 
     doAfter {
@@ -34,18 +33,20 @@ object ThrottledLoggerSpec extends Specification with TestHelper {
 
     "throttle keyed log messages" in {
       val log = Logger()
-      val throttledLog = new ThrottledLogger[String](log, 1000, 3)
-      throttledLog.error("apple", "help!")
-      throttledLog.error("apple", "help 2!")
-      throttledLog.error("orange", "orange!")
-      throttledLog.error("orange", "orange!")
-      throttledLog.error("apple", "help 3!")
-      throttledLog.error("apple", "help 4!")
-      throttledLog.error("apple", "help 5!")
-      throttledLog.reset()
-      throttledLog.error("apple", "done.")
+      val throttledLog = new ThrottledHandler(handler, 1000, 3)
+      log.addHandler(throttledLog)
 
-      handler.toString.split("\n").toList mustEqual List("help!", "help 2!", "orange!", "orange!", "help 3!", "(swallowed 2 repeating messages)", "done.")
+      log.error("apple: %s", "help!")
+      log.error("apple: %s", "help 2!")
+      log.error("orange: %s", "orange!")
+      log.error("orange: %s", "orange!")
+      log.error("apple: %s", "help 3!")
+      log.error("apple: %s", "help 4!")
+      log.error("apple: %s", "help 5!")
+      throttledLog.reset()
+      log.error("apple: %s", "done.")
+
+      handler.toString.split("\n").toList mustEqual List("apple: help!", "apple: help 2!", "orange: orange!", "orange: orange!", "apple: help 3!", "(swallowed 2 repeating messages)", "apple: done.")
     }
   }
 }
