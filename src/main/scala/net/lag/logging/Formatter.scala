@@ -237,9 +237,12 @@ class GenericFormatter(format: String) extends Formatter {
  */
 class FileFormatter extends GenericFormatter("%.3s [<yyyyMMdd-HH:mm:ss.SSS>] %s: ")
 
-class JsonFormatter extends Formatter {
+class ExceptionJsonFormatter extends Formatter {
   private def throwableToMap(wrapped: Throwable): collection.Map[String, Any] = {
-    val rv = mutable.Map[String, Any]("class" -> wrapped.getClass().getName(), "message" -> wrapped.getMessage())
+    val rv = mutable.Map[String, Any]("class" -> wrapped.getClass().getName())
+    if (wrapped.getMessage() != null) {
+      rv += ("message" -> wrapped.getMessage())
+    }
     rv += (("trace", wrapped.getStackTrace().map(_.toString())))
     if (wrapped.getCause() != null) {
       rv += (("cause", throwableToMap(wrapped.getCause())))
@@ -256,8 +259,11 @@ class JsonFormatter extends Formatter {
     val map = mutable.Map[String, Any]()
     if (thrown != null) {
       map ++= throwableToMap(thrown)
+      map += (("created_at", record.getMillis() / 1000))
+      Json.build(map).toString + lineTerminator
+    } else {
+      ""
     }
-    Json.build(map).toString + lineTerminator
   }
 }
 
@@ -265,5 +271,5 @@ object BareFormatter extends Formatter {
   def formatPrefix(level: javalog.Level, date: String, name: String): String = ""
   def lineTerminator: String = ""
   def dateFormat: SimpleDateFormat = new SimpleDateFormat("")
-  override def format(record: javalog.LogRecord) = record.toString
+  override def format(record: javalog.LogRecord) = record.getMessage().format(record.getParameters(): _*)
 }

@@ -354,10 +354,11 @@ object Logger {
     val allowed = List("node", "console", "filename", "roll", "utc",
                        "truncate", "truncate_stack_traces", "level",
                        "use_parents", "syslog_host", "syslog_server_name",
-                       "syslog_use_iso_date_format", "prefix_format",
+                       "syslog_use_iso_date_format", "prefix_format", "format",
                        "use_full_package_names", "append", "scribe_server",
                        "scribe_buffer_msec", "scribe_backoff_msec",
                        "scribe_max_packet_size", "scribe_category",
+                       "throttle_period_msec", "throttle_rate",
                        "scribe_max_buffer", "syslog_priority")
     var forbidden = config.keys.filter(x => !(allowed contains x)).toList
     if (allowNestedBlocks) {
@@ -382,7 +383,8 @@ object Logger {
         }
       }
       case Some("bare") => BareFormatter
-      case Some("json") => new JsonFormatter
+      case Some("exception_json") => new ExceptionJsonFormatter
+      case Some(unknown) => throw new LoggingException("Unknown format: " + unknown)
     }
 
     var handlers: List[Handler] = Nil
@@ -442,6 +444,10 @@ object Logger {
         case Some(x) => x
         case None => throw new LoggingException("Unknown log level: " + levelName)
       }
+    }
+
+    for (period <- config.getLong("throttle_period_msec"); rate <- config.getInt("throttle_rate")) {
+      handlers.map(new ThrottledHandler(_, period.toInt, rate))
     }
 
     for (val handler <- handlers) {
