@@ -374,32 +374,25 @@ object Logger {
       }
     }
 
-    val formatter = config.getString("prefix_format") match {
-      case None => new FileFormatter
-      case Some(format) => new GenericFormatter(format)
+    val formatter = config.getString("format") match {
+      case None => {
+        config.getString("prefix_format") match {
+          case None => new FileFormatter
+          case Some(format) => new GenericFormatter(format)
+        }
+      }
+      case Some("bare") => BareFormatter
+      case Some("json") => new JsonFormatter
     }
 
     var handlers: List[Handler] = Nil
 
     if (config.getBool("console", false)) {
-      handlers = new ConsoleHandler(formatter) :: handlers
-    }
-
-    for (hostname <- config.getString("syslog_host")) {
-      val useIsoDateFormat = config.getBool("syslog_use_iso_date_format", true)
-      val handler = new SyslogHandler(useIsoDateFormat, hostname)
-      for (serverName <- config.getString("syslog_server_name")) {
-        handler.serverName = serverName
-      }
-      for (priority <- config.getInt("syslog_priority")) {
-        handler.priority = priority
-      }
+      val handler = new ConsoleHandler(formatter)
       handlers = handler :: handlers
     }
 
-    // options for using a logfile
     for (val filename <- config.getString("filename")) {
-      // i bet there's an easier way to do this.
       val policy = config.getString("roll", "never").toLowerCase match {
         case "never" => Never
         case "hourly" => Hourly
@@ -413,8 +406,20 @@ object Logger {
         case "saturday" => Weekly(Calendar.SATURDAY)
         case x => throw new LoggingException("Unknown logfile rolling policy: " + x)
       }
-      val fh = new FileHandler(filename, policy, formatter, config.getBool("append", true))
-      handlers = fh :: handlers
+      val handler = new FileHandler(filename, policy, formatter, config.getBool("append", true))
+      handlers = handler :: handlers
+    }
+
+    for (hostname <- config.getString("syslog_host")) {
+      val useIsoDateFormat = config.getBool("syslog_use_iso_date_format", true)
+      val handler = new SyslogHandler(useIsoDateFormat, hostname)
+      for (serverName <- config.getString("syslog_server_name")) {
+        handler.serverName = serverName
+      }
+      for (priority <- config.getInt("syslog_priority")) {
+        handler.priority = priority
+      }
+      handlers = handler :: handlers
     }
 
     for (scribeServer <- config.getString("scribe_server")) {
@@ -440,10 +445,10 @@ object Logger {
     }
 
     for (val handler <- handlers) {
-      level.map { handler.setLevel(_) }
-      handler.useUtc = config.getBool("utc", false)
-      handler.truncateAt = config.getInt("truncate", 0)
-      handler.truncateStackTracesAt = config.getInt("truncate_stack_traces", 30)
+      level.map(handler.setLevel(_))
+      handler.formatter.useUtc = config.getBool("utc", false)
+      handler.formatter.truncateAt = config.getInt("truncate", 0)
+      handler.formatter.truncateStackTracesAt = config.getInt("truncate_stack_traces", 30)
       handler.formatter.useFullPackageNames = config.getBool("use_full_package_names", false)
       if (! validateOnly) {
         logger.addHandler(handler)
