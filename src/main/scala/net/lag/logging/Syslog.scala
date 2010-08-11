@@ -106,7 +106,9 @@ class SyslogFormatter(useIsoDateFormat: Boolean) extends Formatter {
 }
 
 
-class SyslogHandler(useIsoDateFormat: Boolean, server: String) extends Handler(new SyslogFormatter(useIsoDateFormat)) {
+class SyslogHandler(useIsoDateFormat: Boolean, server: String, private val syslogFormatter: SyslogFormatter)
+  extends Handler(syslogFormatter) {
+  def this(useIsoDateFormat: Boolean, server: String) = this(useIsoDateFormat, server, new SyslogFormatter(useIsoDateFormat))
   private val socket = new DatagramSocket
   private[logging] val dest: SocketAddress = server.split(":", 2).toList match {
     case host :: port :: Nil => new InetSocketAddress(host, port.toInt)
@@ -117,22 +119,20 @@ class SyslogHandler(useIsoDateFormat: Boolean, server: String) extends Handler(n
   def flush() = { }
   def close() = { }
 
-  override def formatter = getFormatter.asInstanceOf[SyslogFormatter]
-
-  def priority = formatter.priority
+  def priority = syslogFormatter.priority
   def priority_=(priority: Int) = {
-    formatter.priority = priority
+    syslogFormatter.priority = priority
   }
 
-  def serverName = formatter.serverName
+  def serverName = syslogFormatter.serverName
   def serverName_=(name: String) {
-    formatter.serverName = name
+    syslogFormatter.serverName = name
   }
 
-  def clearServerName = formatter.clearServerName
+  def clearServerName = syslogFormatter.clearServerName
 
   def publish(record: javalog.LogRecord) = {
-    val data = formatter.format(record).getBytes
+    val data = syslogFormatter.format(record).getBytes
     val packet = new DatagramPacket(data, data.length, dest)
     Future {
       try {

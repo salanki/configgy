@@ -22,6 +22,7 @@ import _root_.java.util.{Calendar, Date, TimeZone, logging => javalog}
 import _root_.org.specs._
 import _root_.net.lag.configgy.Config
 import _root_.net.lag.extensions._
+import _root_.sun.misc.Signal
 
 
 object Crazy {
@@ -66,16 +67,21 @@ class TimeWarpingSyslogHandler(useIsoDateFormat: Boolean, server: String) extend
 }
 
 
-class ImmediatelyRollingFileHandler(filename: String, policy: Policy, append: Boolean)
-      extends FileHandler(filename, policy, new FileFormatter, append) {
+class TimeWarpingFileHandler(filename: String, policy: Policy, append: Boolean, handleSighup: Boolean)
+  extends FileHandler(filename, policy, new FileFormatter, append, handleSighup) {
   formatter.timeZone = "GMT"
-
-  override def computeNextRollTime(): Long = System.currentTimeMillis + 100
 
   override def publish(record: javalog.LogRecord) = {
     record.setMillis(1206769996722L)
     super.publish(record)
   }
+}
+
+class ImmediatelyRollingFileHandler(filename: String, policy: Policy, append: Boolean)
+      extends TimeWarpingFileHandler(filename, policy, append, false) {
+  formatter.timeZone = "GMT"
+
+  override def computeNextRollTime(): Long = System.currentTimeMillis + 100
 }
 
 
@@ -145,7 +151,7 @@ object LoggingSpec extends Specification with TestHelper {
     // verify that we can ask logs to be written in UTC
     "log in utc when asked to" in {
       val log = Logger.get("")
-      log.getHandlers()(0).asInstanceOf[Handler].useUtc = true
+      log.getHandlers()(0).asInstanceOf[Handler].formatter.useUtc = true
       log.error("error!")
       eat(handler.toString) mustEqual List("ERR [20080329-05:53:16.722] (root): error!")
     }
@@ -198,7 +204,7 @@ object LoggingSpec extends Specification with TestHelper {
     }
 
     "truncate lines" in {
-      handler.truncateAt = 30
+      handler.formatter.truncateAt = 30
       val log1 = Logger.get("net.lag.whiskey.Train")
       log1.critical("Something terrible happened that may take a very long time to explain because I write crappy log messages.")
 
@@ -240,8 +246,29 @@ object LoggingSpec extends Specification with TestHelper {
       }
     }
 
+    "respond to a sighup to reopen a logfile" in {
+      withTempFolder {
+        val handler = new TimeWarpingFileHandler(folderName + "/new.log", Never, true, true)
+        val log = Logger.get("net.lag.cerveza.Tecate")
+        log.addHandler(handler)
+
+        val logFile = new File(folderName, "new.log")
+        logFile.renameTo(new File(folderName, "old.log"))
+        log.fatal("should be in old file")
+        Signal.raise(new Signal("HUP"))
+        val newLogFile = new File(folderName, "new.log")
+        newLogFile.exists() must eventually(be_==(true))
+        log.fatal("should be in new file")
+
+        val oldReader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(folderName, "old.log"))))
+        oldReader.readLine mustEqual "FAT [20080329-05:53:16.722] cerveza: should be in old file"
+        val newReader = new BufferedReader(new InputStreamReader(new FileInputStream(newLogFile)))
+        newReader.readLine mustEqual "FAT [20080329-05:53:16.722] cerveza: should be in new file"
+      }
+    }
+
     "write stack traces" in {
-      handler.truncateStackTracesAt = 5
+      handler.formatter.truncateStackTracesAt = 5
       val log1 = Logger.get("net.lag.whiskey.Train")
       try {
         Crazy.cycle(10)
@@ -261,7 +288,7 @@ object LoggingSpec extends Specification with TestHelper {
     }
 
     "write nested stack traces" in {
-      handler.truncateStackTracesAt = 2
+      handler.formatter.truncateStackTracesAt = 2
       val log1 = Logger.get("net.lag.whiskey.Train")
       try {
         Crazy.cycle2(2)
@@ -285,7 +312,7 @@ object LoggingSpec extends Specification with TestHelper {
     "roll logs on time" in {
       "hourly" in {
         withTempFolder {
-          val rollHandler = new FileHandler(folderName + "/test.log", Hourly, new FileFormatter, true)
+          val rollHandler = new FileHandler(folderName + "/test.log", Hourly, new FileFormatter, true, false)
           rollHandler.computeNextRollTime(1206769996722L) mustEqual 1206770400000L
           rollHandler.computeNextRollTime(1206770400000L) mustEqual 1206774000000L
           rollHandler.computeNextRollTime(1206774000001L) mustEqual 1206777600000L
@@ -296,7 +323,7 @@ object LoggingSpec extends Specification with TestHelper {
         withTempFolder {
           val formatter = new FileFormatter
           formatter.calendar.setTimeZone(TimeZone.getTimeZone("GMT-7:00"))
-          val rollHandler = new FileHandler(folderName + "/test.log", Weekly(Calendar.SUNDAY), formatter, true)
+          val rollHandler = new FileHandler(folderName + "/test.log", Weekly(Calendar.SUNDAY), formatter, true, false)
           rollHandler.computeNextRollTime(1250354734000L) mustEqual 1250406000000L
           rollHandler.computeNextRollTime(1250404734000L) mustEqual 1250406000000L
           rollHandler.computeNextRollTime(1250406001000L) mustEqual 1251010800000L
@@ -382,13 +409,13 @@ object LoggingSpec extends Specification with TestHelper {
         val log = Logger.configure(c, false, false)
 
         log.getLevel mustEqual Level.DEBUG
-        log.getHandlers.length mustEqual 1
+        log.getHandlers().length mustEqual 1
         val handler = log.getHandlers()(0).asInstanceOf[FileHandler]
         handler.filename mustEqual folderName + "/test.log"
         handler.append mustEqual false
         handler.formatter.formatPrefix(javalog.Level.WARNING, "10:55", "hello") mustEqual "WARNING 10:55 hello"
         log.name mustEqual "net.lag"
-        handler.truncateAt mustEqual 1024
+        handler.formatter.truncateAt mustEqual 1024
         handler.formatter.useFullPackageNames mustEqual true
       }
 
