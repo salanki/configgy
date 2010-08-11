@@ -18,7 +18,7 @@ package net.lag.logging
 
 import _root_.org.specs._
 
-object ThrottledLoggerSpec extends Specification with TestHelper {
+object ThrottledHandlerSpec extends Specification with TestHelper {
   private var handler: Handler = null
 
   "ThrottledHandler" should {
