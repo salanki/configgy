@@ -33,20 +33,22 @@ case class Weekly(dayOfWeek: Int) extends Policy
  * at a requested interval (hourly, daily, or weekly).
  */
 class FileHandler(val filename: String, val policy: Policy, formatter: Formatter,
-                  val append: Boolean) extends Handler(formatter) {
+                  val append: Boolean, val handleSighup: Boolean) extends Handler(formatter) {
   private var stream: Writer = null
   private var openTime: Long = 0
   private var nextRollTime: Long = 0
   openLog()
 
-  HandleSignal("HUP") { signal =>
-    val oldStream = stream
-    synchronized {
-      stream = openWriter()
+  if (handleSighup) {
+    HandleSignal("HUP") { signal =>
+      val oldStream = stream
+      synchronized {
+        stream = openWriter()
+      }
+      try {
+        oldStream.close()
+      } catch { case _ => () }
     }
-    try {
-      oldStream.close()
-    } catch { case _ => () }
   }
 
   def flush() = {

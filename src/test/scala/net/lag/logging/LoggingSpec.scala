@@ -67,8 +67,8 @@ class TimeWarpingSyslogHandler(useIsoDateFormat: Boolean, server: String) extend
 }
 
 
-class TimeWarpingFileHandler(filename: String, policy: Policy, append: Boolean) 
-  extends FileHandler(filename, policy, new FileFormatter, append) {
+class TimeWarpingFileHandler(filename: String, policy: Policy, append: Boolean, handleSighup: Boolean)
+  extends FileHandler(filename, policy, new FileFormatter, append, handleSighup) {
   formatter.timeZone = "GMT"
 
   override def publish(record: javalog.LogRecord) = {
@@ -78,7 +78,7 @@ class TimeWarpingFileHandler(filename: String, policy: Policy, append: Boolean)
 }
 
 class ImmediatelyRollingFileHandler(filename: String, policy: Policy, append: Boolean)
-      extends TimeWarpingFileHandler(filename, policy, append) {
+      extends TimeWarpingFileHandler(filename, policy, append, false) {
   formatter.timeZone = "GMT"
 
   override def computeNextRollTime(): Long = System.currentTimeMillis + 100
@@ -248,7 +248,7 @@ object LoggingSpec extends Specification with TestHelper {
 
     "respond to a sighup to reopen a logfile" in {
       withTempFolder {
-        val handler = new TimeWarpingFileHandler(folderName + "/new.log", Never, true)
+        val handler = new TimeWarpingFileHandler(folderName + "/new.log", Never, true, true)
         val log = Logger.get("net.lag.cerveza.Tecate")
         log.addHandler(handler)
 
@@ -312,7 +312,7 @@ object LoggingSpec extends Specification with TestHelper {
     "roll logs on time" in {
       "hourly" in {
         withTempFolder {
-          val rollHandler = new FileHandler(folderName + "/test.log", Hourly, new FileFormatter, true)
+          val rollHandler = new FileHandler(folderName + "/test.log", Hourly, new FileFormatter, true, false)
           rollHandler.computeNextRollTime(1206769996722L) mustEqual 1206770400000L
           rollHandler.computeNextRollTime(1206770400000L) mustEqual 1206774000000L
           rollHandler.computeNextRollTime(1206774000001L) mustEqual 1206777600000L
@@ -323,7 +323,7 @@ object LoggingSpec extends Specification with TestHelper {
         withTempFolder {
           val formatter = new FileFormatter
           formatter.calendar.setTimeZone(TimeZone.getTimeZone("GMT-7:00"))
-          val rollHandler = new FileHandler(folderName + "/test.log", Weekly(Calendar.SUNDAY), formatter, true)
+          val rollHandler = new FileHandler(folderName + "/test.log", Weekly(Calendar.SUNDAY), formatter, true, false)
           rollHandler.computeNextRollTime(1250354734000L) mustEqual 1250406000000L
           rollHandler.computeNextRollTime(1250404734000L) mustEqual 1250406000000L
           rollHandler.computeNextRollTime(1250406001000L) mustEqual 1251010800000L

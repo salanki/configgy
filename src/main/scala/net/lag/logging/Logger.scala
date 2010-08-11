@@ -358,7 +358,7 @@ object Logger {
                        "use_full_package_names", "append", "scribe_server",
                        "scribe_buffer_msec", "scribe_backoff_msec",
                        "scribe_max_packet_size", "scribe_category",
-                       "throttle_period_msec", "throttle_rate",
+                       "throttle_period_msec", "throttle_rate", "handle_sighup",
                        "scribe_max_buffer", "syslog_priority")
     var forbidden = config.keys.filter(x => !(allowed contains x)).toList
     if (allowNestedBlocks) {
@@ -408,7 +408,8 @@ object Logger {
         case "saturday" => Weekly(Calendar.SATURDAY)
         case x => throw new LoggingException("Unknown logfile rolling policy: " + x)
       }
-      val handler = new FileHandler(filename, policy, formatter, config.getBool("append", true))
+      val handler =
+        new FileHandler(filename, policy, formatter, config.getBool("append", true), config.getBool("handle_sighup", false))
       handlers = handler :: handlers
     }
 
