@@ -271,5 +271,5 @@ object BareFormatter extends Formatter {
   def formatPrefix(level: javalog.Level, date: String, name: String): String = ""
   def lineTerminator: String = "\n"
   def dateFormat: SimpleDateFormat = new SimpleDateFormat("")
-  override def format(record: javalog.LogRecord) = record.getMessage().format(record.getParameters(): _*)
+  override def format(record: javalog.LogRecord) = record.getMessage().format(record.getParameters(): _*) + lineTerminator
 }
