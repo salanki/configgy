@@ -448,7 +448,7 @@ object Logger {
     }
 
     for (period <- config.getLong("throttle_period_msec"); rate <- config.getInt("throttle_rate")) {
-      handlers.map(new ThrottledHandler(_, period.toInt, rate))
+      handlers = handlers.map(new ThrottledHandler(_, period.toInt, rate))
     }
 
     for (val handler <- handlers) {
