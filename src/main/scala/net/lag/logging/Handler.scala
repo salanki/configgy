@@ -26,38 +26,7 @@ import net.lag.extensions._
  * and connects it with a formatter automatically.
  */
 abstract class Handler(val formatter: Formatter) extends javalog.Handler {
-
   setFormatter(formatter)
-
-
-  /**
-   * Where to truncate log messages (character count). 0 = don't truncate.
-   */
-
-  /**
-   * Where to truncate log messages (character count). 0 = don't truncate.
-   */
-
-  /**
-   * Where to truncate stack traces in exception logging (line count).
-   */
-
-  /**
-   * Where to truncate stack traces in exception logging (line count).
-   */
-
-  /**
-   * Return <code>true</code> if dates in log messages are being reported
-   * in UTC time, or <code>false</code> if they're being reported in local
-   * time.
-   */
-
-  /**
-   * Set whether dates in log messages should be reported in UTC time
-   * (<code>true</code>) or local time (<code>false</code>, the default).
-   * This variable and <code>timeZone</code> affect the same settings, so
-   * whichever is called last will take precedence.
-   */
 
   override def toString = {
     "<%s level=%s formatter=%s>".format(getClass.getName, getLevel, formatter.toString)
