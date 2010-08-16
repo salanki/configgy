@@ -111,9 +111,9 @@ object LoggingSpec extends Specification with TestHelper {
     }
 
     "provide level name and value maps" in {
-      Logger.levels mustEqual Map(Level.ALL.value -> Level.ALL, Level.TRACE.value -> Level.TRACE, 
-        Level.DEBUG.value -> Level.DEBUG, Level.INFO.value -> Level.INFO, Level.WARNING.value -> Level.WARNING, 
-        Level.ERROR.value -> Level.ERROR, Level.CRITICAL.value -> Level.CRITICAL, Level.FATAL.value -> Level.FATAL, 
+      Logger.levels mustEqual Map(Level.ALL.value -> Level.ALL, Level.TRACE.value -> Level.TRACE,
+        Level.DEBUG.value -> Level.DEBUG, Level.INFO.value -> Level.INFO, Level.WARNING.value -> Level.WARNING,
+        Level.ERROR.value -> Level.ERROR, Level.CRITICAL.value -> Level.CRITICAL, Level.FATAL.value -> Level.FATAL,
         Level.OFF.value -> Level.OFF)
       Logger.levelNames mustEqual Map("ALL" -> Level.ALL, "TRACE" -> Level.TRACE, "DEBUG" -> Level.DEBUG,
         "INFO" -> Level.INFO, "WARNING" -> Level.WARNING, "ERROR" -> Level.ERROR,
@@ -436,6 +436,24 @@ object LoggingSpec extends Specification with TestHelper {
         h.dest.asInstanceOf[InetSocketAddress].getPort mustEqual 212
         h.serverName mustEqual "elmo"
         h.priority mustEqual 128
+      }
+
+      withTempFolder {
+        // FIXME failing test to configure throttling
+        val TEST_DATA =
+          "node=\"net.lag\"\n" +
+          "console on\n" +
+          "throttle_period_msec=100\n" +
+          "throttle_rate=10\n"
+
+        val c = new Config
+        c.load(TEST_DATA)
+        val log = Logger.configure(c, false, true)
+
+        log.getHandlers.length mustEqual 1
+        val h = log.getHandlers()(0).asInstanceOf[ThrottledHandler]
+        h.durationMilliseconds mustEqual 100
+        h.maxToDisplay mustEqual 10
       }
     }
 
