@@ -354,10 +354,11 @@ object Logger {
     val allowed = List("node", "console", "filename", "roll", "utc",
                        "truncate", "truncate_stack_traces", "level",
                        "use_parents", "syslog_host", "syslog_server_name",
-                       "syslog_use_iso_date_format", "prefix_format",
+                       "syslog_use_iso_date_format", "prefix_format", "format",
                        "use_full_package_names", "append", "scribe_server",
                        "scribe_buffer_msec", "scribe_backoff_msec",
                        "scribe_max_packet_size", "scribe_category",
+                       "throttle_period_msec", "throttle_rate", "handle_sighup",
                        "scribe_max_buffer", "syslog_priority")
     var forbidden = config.keys.filter(x => !(allowed contains x)).toList
     if (allowNestedBlocks) {
@@ -374,32 +375,26 @@ object Logger {
       }
     }
 
-    val formatter = config.getString("prefix_format") match {
-      case None => new FileFormatter
-      case Some(format) => new GenericFormatter(format)
+    val formatter = config.getString("format") match {
+      case None => {
+        config.getString("prefix_format") match {
+          case None => new FileFormatter
+          case Some(format) => new GenericFormatter(format)
+        }
+      }
+      case Some("bare") => BareFormatter
+      case Some("exception_json") => new ExceptionJsonFormatter
+      case Some(unknown) => throw new LoggingException("Unknown format: " + unknown)
     }
 
     var handlers: List[Handler] = Nil
 
     if (config.getBool("console", false)) {
-      handlers = new ConsoleHandler(formatter) :: handlers
-    }
-
-    for (hostname <- config.getString("syslog_host")) {
-      val useIsoDateFormat = config.getBool("syslog_use_iso_date_format", true)
-      val handler = new SyslogHandler(useIsoDateFormat, hostname)
-      for (serverName <- config.getString("syslog_server_name")) {
-        handler.serverName = serverName
-      }
-      for (priority <- config.getInt("syslog_priority")) {
-        handler.priority = priority
-      }
+      val handler = new ConsoleHandler(formatter)
       handlers = handler :: handlers
     }
 
-    // options for using a logfile
     for (val filename <- config.getString("filename")) {
-      // i bet there's an easier way to do this.
       val policy = config.getString("roll", "never").toLowerCase match {
         case "never" => Never
         case "hourly" => Hourly
@@ -413,8 +408,21 @@ object Logger {
         case "saturday" => Weekly(Calendar.SATURDAY)
         case x => throw new LoggingException("Unknown logfile rolling policy: " + x)
       }
-      val fh = new FileHandler(filename, policy, formatter, config.getBool("append", true))
-      handlers = fh :: handlers
+      val handler =
+        new FileHandler(filename, policy, formatter, config.getBool("append", true), config.getBool("handle_sighup", false))
+      handlers = handler :: handlers
+    }
+
+    for (hostname <- config.getString("syslog_host")) {
+      val useIsoDateFormat = config.getBool("syslog_use_iso_date_format", true)
+      val handler = new SyslogHandler(useIsoDateFormat, hostname)
+      for (serverName <- config.getString("syslog_server_name")) {
+        handler.serverName = serverName
+      }
+      for (priority <- config.getInt("syslog_priority")) {
+        handler.priority = priority
+      }
+      handlers = handler :: handlers
     }
 
     for (scribeServer <- config.getString("scribe_server")) {
@@ -439,11 +447,15 @@ object Logger {
       }
     }
 
+    for (period <- config.getLong("throttle_period_msec"); rate <- config.getInt("throttle_rate")) {
+      handlers = handlers.map(new ThrottledHandler(_, period.toInt, rate))
+    }
+
     for (val handler <- handlers) {
-      level.map { handler.setLevel(_) }
-      handler.useUtc = config.getBool("utc", false)
-      handler.truncateAt = config.getInt("truncate", 0)
-      handler.truncateStackTracesAt = config.getInt("truncate_stack_traces", 30)
+      level.map(handler.setLevel(_))
+      handler.formatter.useUtc = config.getBool("utc", false)
+      handler.formatter.truncateAt = config.getInt("truncate", 0)
+      handler.formatter.truncateStackTracesAt = config.getInt("truncate_stack_traces", 30)
       handler.formatter.useFullPackageNames = config.getBool("use_full_package_names", false)
       if (! validateOnly) {
         logger.addHandler(handler)
