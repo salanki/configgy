@@ -300,7 +300,7 @@ There are a handful of options to tune logging more directly:
   when using the generic formatter, customize the format of log line prefixes (see below)
 - `throttle_period_msec`, `throttle_rate` -
   throttle log messages going to this output. `throttle_rate` defines the number of lines
-  per `throttle_period` to allow before squelching. The messages are uniquely identified
+  per `throttle_period_msec` to allow before squelching. The messages are uniquely identified
   by their pre-printf formatting pattern.
 - `handle_sighup` -
   if set to true, attaches a handler to the HUP signal which causes the logger to
