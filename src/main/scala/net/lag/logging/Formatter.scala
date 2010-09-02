@@ -259,6 +259,7 @@ class ExceptionJsonFormatter extends Formatter {
     val map = mutable.Map[String, Any]()
     if (thrown != null) {
       map ++= throwableToMap(thrown)
+      map += ("level" -> record.getLevel())
       map += (("created_at", record.getMillis() / 1000))
       Json.build(map).toString + lineTerminator
     } else {
