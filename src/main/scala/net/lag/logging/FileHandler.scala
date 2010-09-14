@@ -37,6 +37,7 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
   private var stream: Writer = null
   private var openTime: Long = 0
   private var nextRollTime: Long = 0
+  var rotateCount = -1
   openLog()
 
   if (handleSighup) {
@@ -117,16 +118,34 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
 
   def computeNextRollTime(): Long = computeNextRollTime(System.currentTimeMillis)
 
-  private def roll() = {
+  /**
+   * Delete files when "too many" have accumulated.
+   * This duplicates logrotate's "rotate count" option.
+   */
+  private def removeOldFiles() = {
+    val rotateCountPlusOne = rotateCount + 1  // Because the new file is already open.
+    if (rotateCountPlusOne >= 1) {
+      val filesInLogDir = new File(filename).getParentFile().list()
+      val filteredFilesInLogDir = filesInLogDir.filter(f => f.startsWith(new File(filename).getName()))
+      if (filteredFilesInLogDir.length > rotateCount) {
+        for (i <- rotateCount.until(filteredFilesInLogDir.length)) {
+          new File(filteredFilesInLogDir(i)).delete()
+        }
+      }
+    }
+  }
+
+  def roll() = {
     stream.close()
     val n = filename.lastIndexOf('.')
-    var newFilename = if (n > 0) {
+    val newFilename = if (n > 0) {
       filename.substring(0, n) + "-" + timeSuffix(new Date(openTime)) + filename.substring(n)
     } else {
       filename + "-" + timeSuffix(new Date(openTime))
     }
     new File(filename).renameTo(new File(newFilename))
     openLog()
+    removeOldFiles()
   }
 
   def publish(record: javalog.LogRecord) = synchronized {

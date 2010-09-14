@@ -362,6 +362,30 @@ object LoggingSpec extends Specification with TestHelper {
       }
     }
 
+    // verify the correct number of log files are retained.
+    "keep rotate count log files around" in {
+      withTempFolder {
+        new File(folderName).list().length mustEqual 0
+
+        val log = Logger.get("net.lag.whiskey.Train")
+        val handler = new FileHandler(folderName + "/test.log", Hourly, new FileFormatter, true, true)
+        handler.rotateCount = 2
+        log.addHandler(handler)
+
+        log.fatal("first file")
+        new File(folderName).list().length mustEqual 1
+        handler.roll()
+
+        log.fatal("second file")
+        new File(folderName).list().length mustEqual 2
+        handler.roll()
+
+        log.fatal("third file")
+        new File(folderName).list().length mustEqual 2
+        handler.close()
+      }
+    }
+
     "write syslog entries" in {
       // start up new syslog listener
       val serverSocket = new DatagramSocket

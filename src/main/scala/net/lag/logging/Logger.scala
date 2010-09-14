@@ -359,7 +359,7 @@ object Logger {
                        "scribe_buffer_msec", "scribe_backoff_msec",
                        "scribe_max_packet_size", "scribe_category",
                        "throttle_period_msec", "throttle_rate", "handle_sighup",
-                       "scribe_max_buffer", "syslog_priority")
+                       "scribe_max_buffer", "syslog_priority", "rotate_count")
     var forbidden = config.keys.filter(x => !(allowed contains x)).toList
     if (allowNestedBlocks) {
       forbidden = forbidden.filter(x => !config.getConfigMap(x).isDefined)
@@ -410,6 +410,10 @@ object Logger {
       }
       val handler =
         new FileHandler(filename, policy, formatter, config.getBool("append", true), config.getBool("handle_sighup", false))
+      val rotateCount = config.getInt("rotate_count", -1 )
+      if (rotateCount != -1) {
+        handler.rotateCount = rotateCount
+      }
       handlers = handler :: handlers
     }
 
