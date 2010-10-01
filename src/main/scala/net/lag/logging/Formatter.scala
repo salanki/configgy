@@ -28,10 +28,12 @@ private[logging] object Formatter {
   // FIXME: might be nice to unmangle some scala names here.
   private[logging] def formatStackTrace(t: Throwable, limit: Int): mutable.ListBuffer[String] = {
     var out = new mutable.ListBuffer[String]
-    out ++= t.getStackTrace.map { elem => "    at %s".format(elem.toString) }
-    if (out.length > limit) {
-      out.trimEnd(out.length - limit)
-      out += "    (...more...)"
+    if (limit > 0) {
+      out ++= t.getStackTrace.map { elem => "    at %s".format(elem.toString) }
+      if (out.length > limit) {
+        out.trimEnd(out.length - limit)
+        out += "    (...more...)"
+      }
     }
     if (t.getCause ne null) {
       out += "Caused by %s".format(t.getCause.toString)
