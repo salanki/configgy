@@ -378,7 +378,9 @@ object Logger {
     val formatter = config.getString("format") match {
       case None => {
         config.getString("prefix_format") match {
-          case None => new FileFormatter
+          case None => {
+            new FileFormatter
+          }
           case Some(format) => new GenericFormatter(format)
         }
       }

@@ -19,7 +19,7 @@ package net.lag.logging
 import _root_.scala.collection.mutable
 import java.util.{logging => javalog}
 
-class ThrottledHandler(wrapped: Handler, val durationMilliseconds: Int, val maxToDisplay: Int) extends Handler(BareFormatter) {
+class ThrottledHandler(wrapped: Handler, val durationMilliseconds: Int, val maxToDisplay: Int) extends Handler(wrapped.formatter) {
   private class Throttle(now: Long) {
     var startTime: Long = now
     var count: Int = 0
