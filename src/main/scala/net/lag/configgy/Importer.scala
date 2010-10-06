@@ -61,6 +61,11 @@ trait Importer {
         out.append(buffer, 0, n)
       }
     }
+    try {
+      in.close()
+    } catch {
+      case _ =>
+    }
     out.toString
   }
 }
