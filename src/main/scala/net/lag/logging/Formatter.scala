@@ -35,7 +35,7 @@ private[logging] object Formatter {
         out += "    (...more...)"
       }
     }
-    if (t.getCause ne null) {
+    if ((t.getCause ne null) && (t.getCause ne t)) {
       out += "Caused by %s".format(t.getCause.toString)
       out ++= formatStackTrace(t.getCause, limit)
     }
