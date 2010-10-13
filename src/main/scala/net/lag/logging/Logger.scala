@@ -396,9 +396,7 @@ object Logger {
       handlers = handler :: handlers
     }
 
-    // options for using a logfile
     for (filename <- config.getString("filename")) {
-      // i bet there's an easier way to do this.
       val policy = config.getString("roll", "never").toLowerCase match {
         case "never" => Never
         case "hourly" => Hourly
@@ -459,7 +457,7 @@ object Logger {
       handlers = handlers.map(new ThrottledHandler(_, period.toInt, rate))
     }
 
-    for (val handler <- handlers) {
+    for (handler <- handlers) {
       level.map(handler.setLevel(_))
       handler.formatter.useUtc = config.getBool("utc", false)
       handler.formatter.truncateAt = config.getInt("truncate", 0)
