@@ -58,7 +58,7 @@ class RuntimeEnvironment(cls: Class[_]) {
    * figure out the environment.
    */
   lazy val jarPath: Option[String] = {
-    val pattern = ("(.*?)" + jarName + "(_([\\d+.]+)?)-" + jarVersion + "\\.jar$").r
+    val pattern = ("(.*?)" + jarName + "(?:_[\\d.]+)?-" + jarVersion + "\\.jar$").r
     (System.getProperty("java.class.path") split System.getProperty("path.separator")).map { elem =>
       elem match {
         case pattern(path) => Some(new File(path).getCanonicalPath)
