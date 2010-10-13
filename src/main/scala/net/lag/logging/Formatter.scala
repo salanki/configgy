@@ -21,18 +21,21 @@ import java.util.{Date, GregorianCalendar, TimeZone, logging => javalog}
 import java.util.regex.Pattern
 import scala.collection.mutable
 import net.lag.extensions._
+import com.twitter.json.Json
 
 
 private[logging] object Formatter {
   // FIXME: might be nice to unmangle some scala names here.
   private[logging] def formatStackTrace(t: Throwable, limit: Int): mutable.ListBuffer[String] = {
     var out = new mutable.ListBuffer[String]
-    out ++= t.getStackTrace.map { elem => "    at %s".format(elem.toString) }
-    if (out.length > limit) {
-      out.trimEnd(out.length - limit)
-      out += "    (...more...)"
+    if (limit > 0) {
+      out ++= t.getStackTrace.map { elem => "    at %s".format(elem.toString) }
+      if (out.length > limit) {
+        out.trimEnd(out.length - limit)
+        out += "    (...more...)"
+      }
     }
-    if (t.getCause ne null) {
+    if ((t.getCause ne null) && (t.getCause ne t)) {
       out += "Caused by %s".format(t.getCause.toString)
       out ++= formatStackTrace(t.getCause, limit)
     }
@@ -235,3 +238,48 @@ class GenericFormatter(format: String) extends Formatter {
  * although packages can override this.
  */
 class FileFormatter extends GenericFormatter("%.3s [<yyyyMMdd-HH:mm:ss.SSS>] %s: ")
+
+class ExceptionJsonFormatter extends Formatter {
+  private def throwableToMap(wrapped: Throwable): collection.Map[String, Any] = {
+    val rv = mutable.Map[String, Any]("class" -> wrapped.getClass().getName())
+    if (wrapped.getMessage() != null) {
+      rv += ("message" -> wrapped.getMessage())
+    }
+    rv += (("trace", wrapped.getStackTrace().map(_.toString())))
+    if (wrapped.getCause() != null) {
+      rv += (("cause", throwableToMap(wrapped.getCause())))
+    }
+    rv
+  }
+
+  def formatPrefix(level: javalog.Level, date: String, name: String): String = ""
+  def lineTerminator: String = "\n"
+  def dateFormat: SimpleDateFormat = new SimpleDateFormat("")
+
+  override def format(record: javalog.LogRecord) = {
+    val thrown = record.getThrown()
+    val map = mutable.Map[String, Any]()
+    if (thrown != null) {
+      map ++= throwableToMap(thrown)
+      map += ("level" -> record.getLevel())
+      map += (("created_at", record.getMillis() / 1000))
+      Json.build(map).toString + lineTerminator
+    } else {
+      ""
+    }
+  }
+}
+
+object BareFormatter extends Formatter {
+  def formatPrefix(level: javalog.Level, date: String, name: String): String = ""
+  def lineTerminator: String = "\n"
+  def dateFormat: SimpleDateFormat = new SimpleDateFormat("")
+  override def format(record: javalog.LogRecord) = {
+    record.getParameters match {
+      case null =>
+        record.getMessage() + lineTerminator
+      case formatArgs =>
+        record.getMessage().format(record.getParameters(): _*) + lineTerminator
+    }
+  }
+}

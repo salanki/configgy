@@ -292,12 +292,24 @@ There are a handful of options to tune logging more directly:
 - `append` -
   set `off` to create a new logfile each time the app starts (default:
   on, meaning to append to any existing logfile)
+- `format` -
+  sets the overall output format. `bare` means no formatting. `exception_json`
+  logs throwables in json format.
+  (default: use a generic formatter, which honors `prefix_format`)
 - `prefix_format` -
-  customize the format of log line prefixes (see below)
+  when using the generic formatter, customize the format of log line prefixes (see below)
+- `throttle_period_msec`, `throttle_rate` -
+  throttle log messages going to this output. `throttle_rate` defines the number of lines
+  per `throttle_period_msec` to allow before squelching. The messages are uniquely identified
+  by their pre-printf formatting pattern.
+- `handle_sighup` -
+  if set to true, attaches a handler to the HUP signal which causes the logger to
+  reopen its logfile. This allows configgy to work well with external log rotation
+  tools.
 
 The logging options are usually set on the root node of java's "logging tree",
 at "". You can set options or logging handlers at other nodes by putting them
-in config blocks inside `<log>`. For example:
+in config blocks inside `<log>`, and specifying a node name. For example:
 
     log {
       filename = "test.log"
@@ -315,13 +327,15 @@ in config blocks inside `<log>`. For example:
 The "com.example.libnoise" node will log at "critical" level (presumably to
 silence a noisy library), while everything else will log at "warning" level.
 You can put any of the logging options inside these blocks, including those
-for logging to files or syslog nodes, so in this way you can create multiple
-logfiles.
+for logging to files or syslog nodes. Also, you can have multiple blocks per
+node, so you can attach multiple output files and handlers to a single log node.
+In this way you can create multiple logfiles, or have log lines go to multiple
+places, such as syslog or scribe.
 
 The extra options you can use in these inner blocks are:
 
 - `node` -
-  define the log node name (as a string)
+  define the log node name (as a string). (default: use the root "" logger)
 - `use_parents` -
   whether to fall back to parent log-node configuration (java's 
   `setUseParentHandlers`) (default: on)
