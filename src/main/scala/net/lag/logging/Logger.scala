@@ -370,7 +370,7 @@ object Logger {
 
     val logger = Logger.get(config.getString("node", ""))
     if (!validateOnly && allowNestedBlocks) {
-      for (val handler <- logger.getHandlers) {
+      for (handler <- logger.getHandlers) {
         logger.removeHandler(handler)
       }
     }
@@ -396,7 +396,7 @@ object Logger {
       handlers = handler :: handlers
     }
 
-    for (val filename <- config.getString("filename")) {
+    for (filename <- config.getString("filename")) {
       val policy = config.getString("roll", "never").toLowerCase match {
         case "never" => Never
         case "hourly" => Hourly
@@ -457,7 +457,7 @@ object Logger {
       handlers = handlers.map(new ThrottledHandler(_, period.toInt, rate))
     }
 
-    for (val handler <- handlers) {
+    for (handler <- handlers) {
       level.map(handler.setLevel(_))
       handler.formatter.useUtc = config.getBool("utc", false)
       handler.formatter.truncateAt = config.getInt("truncate", 0)
