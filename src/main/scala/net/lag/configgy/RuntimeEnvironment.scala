@@ -60,7 +60,7 @@ class RuntimeEnvironment(cls: Class[_]) {
   lazy val jarPath: Option[String] = {
     val paths = System.getProperty("java.class.path").split(System.getProperty("path.separator"))
     findCandidateJar(paths, jarName, jarVersion).map { path =>
-      new File(path).getCanonicalPath
+      new File(path).getParentFile.getCanonicalPath
     }
   }
 
