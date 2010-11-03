@@ -397,6 +397,7 @@ object Logger {
     }
 
     for (filename <- config.getString("filename")) {
+      var handleSighup = config.getBool("handle_sighup", false)
       val policy = config.getString("roll", "never").toLowerCase match {
         case "never" => Never
         case "hourly" => Hourly
@@ -408,10 +409,11 @@ object Logger {
         case "thursday" => Weekly(Calendar.THURSDAY)
         case "friday" => Weekly(Calendar.FRIDAY)
         case "saturday" => Weekly(Calendar.SATURDAY)
+        case "hup" => handleSighup = true; Never
         case x => throw new LoggingException("Unknown logfile rolling policy: " + x)
       }
       val handler =
-        new FileHandler(filename, policy, formatter, config.getBool("append", true), config.getBool("handle_sighup", false))
+        new FileHandler(filename, policy, formatter, config.getBool("append", true), handleSighup)
       val rotateCount = config.getInt("rotate_count", -1 )
       if (rotateCount != -1) {
         handler.rotateCount = rotateCount
