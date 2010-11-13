@@ -16,12 +16,10 @@
 
 package net.lag.logging
 
-import java.text.SimpleDateFormat
-import java.util.{Calendar, Date, logging => javalog}
+import java.util.{Calendar, logging => javalog}
 import scala.collection.Map
 import scala.collection.mutable
-import net.lag.extensions._
-import net.lag.configgy.{ConfigException, ConfigMap}
+import net.lag.configgy.ConfigMap
 
 
 // replace java's ridiculous log levels with the standard ones.
@@ -274,15 +272,7 @@ object Logger {
       case Some(logger) =>
         logger
       case None =>
-        val manager = javalog.LogManager.getLogManager
-        val logger = manager.getLogger(name) match {
-          case null =>
-            val javaLogger = javalog.Logger.getLogger(name)
-            manager.addLogger(javaLogger)
-            new Logger(name, javaLogger)
-          case x: javalog.Logger =>
-            new Logger(name, x)
-        }
+        val logger = new Logger(name, javalog.Logger.getLogger(name))
         logger.setUseParentHandlers(true)
         loggersCache.put(name, logger)
         logger
@@ -324,17 +314,7 @@ object Logger {
   /**
    * Iterate the Logger objects that have been created.
    */
-  def elements: Iterator[Logger] = {
-    val manager = javalog.LogManager.getLogManager
-    val loggers = new mutable.Queue[Logger]
-    // why on earth did java use ENUMERATION here?!
-    val e = manager.getLoggerNames
-    while (e.hasMoreElements) {
-      val item = manager.getLogger(e.nextElement.asInstanceOf[String])
-      if (item ne null) loggers += get(item.getName)
-    }
-    loggers.elements
-  }
+  def elements: Iterator[Logger] = loggersCache.values.elements
 
   /**
    * Create a Logger (or find an existing one) and configure it according
