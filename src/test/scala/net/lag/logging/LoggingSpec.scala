@@ -431,6 +431,7 @@ object LoggingSpec extends Specification with TestHelper {
           "filename=\"" + folderName + "/test.log\"\n" +
           "level=\"debug\"\n" +
           "truncate=1024\n" +
+          "roll=\"hup\"\n" +
           "use_full_package_names = true\n" +
           "prefix_format=\"%s <HH:mm> %s\"\n" +
           "append off\n"
@@ -444,6 +445,8 @@ object LoggingSpec extends Specification with TestHelper {
         val handler = log.getHandlers()(0).asInstanceOf[FileHandler]
         handler.filename mustEqual folderName + "/test.log"
         handler.append mustEqual false
+        handler.policy mustEqual Never
+        handler.handleSighup mustEqual true
         handler.formatter.formatPrefix(javalog.Level.WARNING, "10:55", "hello") mustEqual "WARNING 10:55 hello"
         log.name mustEqual "net.lag"
         handler.formatter.truncateAt mustEqual 1024

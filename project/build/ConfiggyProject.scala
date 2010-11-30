@@ -1,8 +1,8 @@
 import sbt._
 import com.twitter.sbt._
 
-class ConfiggyProject(info: ProjectInfo) extends StandardProject(info) with InlineDependencies {
-  inline("com.twitter" % "json" % "1.1.3")
+class ConfiggyProject(info: ProjectInfo) extends StandardProject(info) with SubversionPublisher with InlineDependencies {
+  inline("com.twitter" % "json" % "1.1.7")
   val specs = "org.scala-tools.testing" % "specs" % "1.6.2.1" % "test"
   val vscaladoc = "org.scala-tools" % "vscaladoc" % "1.1-md-3" % "provided->default"
 
@@ -15,6 +15,5 @@ class ConfiggyProject(info: ProjectInfo) extends StandardProject(info) with Inli
       </license>
     </licenses>
 
-  Credentials(Path.userHome / ".ivy2" / "credentials", log)
-  val publishTo = "nexus" at "http://nexus.scala-tools.org/content/repositories/releases/"
+  override def subversionRepository = Some("http://svn.local.twitter.com/maven-public")
 }

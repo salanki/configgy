@@ -28,12 +28,14 @@ private[logging] object Formatter {
   // FIXME: might be nice to unmangle some scala names here.
   private[logging] def formatStackTrace(t: Throwable, limit: Int): mutable.ListBuffer[String] = {
     var out = new mutable.ListBuffer[String]
-    out ++= t.getStackTrace.map { elem => "    at %s".format(elem.toString) }
-    if (out.length > limit) {
-      out.trimEnd(out.length - limit)
-      out += "    (...more...)"
+    if (limit > 0) {
+      out ++= t.getStackTrace.map { elem => "    at %s".format(elem.toString) }
+      if (out.length > limit) {
+        out.trimEnd(out.length - limit)
+        out += "    (...more...)"
+      }
     }
-    if (t.getCause ne null) {
+    if ((t.getCause ne null) && (t.getCause ne t)) {
       out += "Caused by %s".format(t.getCause.toString)
       out ++= formatStackTrace(t.getCause, limit)
     }
@@ -172,8 +174,11 @@ abstract class Formatter extends javalog.Formatter {
     lines ++= message.split("\n")
 
     if (record.getThrown ne null) {
-      lines += record.getThrown.toString
-      lines ++= Formatter.formatStackTrace(record.getThrown, truncateStackTracesAt)
+      val traceLines = Formatter.formatStackTrace(record.getThrown, truncateStackTracesAt)
+      if (traceLines.size > 0) {
+        lines += record.getThrown.toString
+        lines ++= traceLines
+      }
     }
     val prefix = formatPrefix(record.getLevel, dateFormat.format(new Date(record.getMillis)), name)
     lines.mkString(prefix, lineTerminator + prefix, lineTerminator)

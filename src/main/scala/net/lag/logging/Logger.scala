@@ -370,7 +370,7 @@ object Logger {
 
     val logger = Logger.get(config.getString("node", ""))
     if (!validateOnly && allowNestedBlocks) {
-      for (val handler <- logger.getHandlers) {
+      for (handler <- logger.getHandlers) {
         logger.removeHandler(handler)
       }
     }
@@ -378,7 +378,9 @@ object Logger {
     val formatter = config.getString("format") match {
       case None => {
         config.getString("prefix_format") match {
-          case None => new FileFormatter
+          case None => {
+            new FileFormatter
+          }
           case Some(format) => new GenericFormatter(format)
         }
       }
@@ -394,7 +396,8 @@ object Logger {
       handlers = handler :: handlers
     }
 
-    for (val filename <- config.getString("filename")) {
+    for (filename <- config.getString("filename")) {
+      var handleSighup = config.getBool("handle_sighup", false)
       val policy = config.getString("roll", "never").toLowerCase match {
         case "never" => Never
         case "hourly" => Hourly
@@ -406,10 +409,11 @@ object Logger {
         case "thursday" => Weekly(Calendar.THURSDAY)
         case "friday" => Weekly(Calendar.FRIDAY)
         case "saturday" => Weekly(Calendar.SATURDAY)
+        case "hup" => handleSighup = true; Never
         case x => throw new LoggingException("Unknown logfile rolling policy: " + x)
       }
       val handler =
-        new FileHandler(filename, policy, formatter, config.getBool("append", true), config.getBool("handle_sighup", false))
+        new FileHandler(filename, policy, formatter, config.getBool("append", true), handleSighup)
       val rotateCount = config.getInt("rotate_count", -1 )
       if (rotateCount != -1) {
         handler.rotateCount = rotateCount
@@ -455,7 +459,7 @@ object Logger {
       handlers = handlers.map(new ThrottledHandler(_, period.toInt, rate))
     }
 
-    for (val handler <- handlers) {
+    for (handler <- handlers) {
       level.map(handler.setLevel(_))
       handler.formatter.useUtc = config.getBool("utc", false)
       handler.formatter.truncateAt = config.getInt("truncate", 0)
