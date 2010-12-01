@@ -174,8 +174,11 @@ abstract class Formatter extends javalog.Formatter {
     lines ++= message.split("\n")
 
     if (record.getThrown ne null) {
-      lines += record.getThrown.toString
-      lines ++= Formatter.formatStackTrace(record.getThrown, truncateStackTracesAt)
+      val traceLines = Formatter.formatStackTrace(record.getThrown, truncateStackTracesAt)
+      if (traceLines.size > 0) {
+        lines += record.getThrown.toString
+        lines ++= traceLines
+      }
     }
     val prefix = formatPrefix(record.getLevel, dateFormat.format(new Date(record.getMillis)), name)
     lines.mkString(prefix, lineTerminator + prefix, lineTerminator)

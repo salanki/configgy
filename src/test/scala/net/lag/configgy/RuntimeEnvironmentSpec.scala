@@ -50,5 +50,17 @@ class RuntimeEnvironmentSpec extends Specification with TestHelper {
         Configgy.config("nested.extra") mustEqual "tasty"
       }
     }
+
+    "find executable jar path" in {
+      val runtime = new RuntimeEnvironment(classOf[Config])
+      runtime.findCandidateJar(List("./dist/flockdb/flockdb-1.4.1.jar"), "flockdb", "1.4.1") mustEqual
+        Some("./dist/flockdb/flockdb-1.4.1.jar")
+      runtime.findCandidateJar(List("./dist/flockdb/flockdb_2.7.7-1.4.1.jar"), "flockdb", "1.4.1") mustEqual
+        Some("./dist/flockdb/flockdb_2.7.7-1.4.1.jar")
+      runtime.findCandidateJar(List("./dist/flockdb/wrong-1.4.1.jar"), "flockdb", "1.4.1") mustEqual
+        None
+      runtime.findCandidateJar(List("./dist/flockdb/flockdb-1.4.1-SNAPSHOT.jar"), "flockdb", "1.4.1-SNAPSHOT") mustEqual
+        Some("./dist/flockdb/flockdb-1.4.1-SNAPSHOT.jar")
+    }
   }
 }

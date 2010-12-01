@@ -58,13 +58,18 @@ class RuntimeEnvironment(cls: Class[_]) {
    * figure out the environment.
    */
   lazy val jarPath: Option[String] = {
-    val pattern = ("(.*?)" + jarName + "(?:_[\\d.]+)?-" + jarVersion + "\\.jar$").r
-    (System.getProperty("java.class.path") split System.getProperty("path.separator")).map { elem =>
-      elem match {
-        case pattern(path) => Some(new File(path).getCanonicalPath)
-        case _ => None
-      }
-    }.toSeq.flatten.headOption
+    val paths = System.getProperty("java.class.path").split(System.getProperty("path.separator"))
+    findCandidateJar(paths, jarName, jarVersion).flatMap { path =>
+      val parent = new File(path).getParentFile
+      if (parent == null) None else Some(parent.getCanonicalPath)
+    }
+  }
+
+  def findCandidateJar(paths: Seq[String], name: String, version: String): Option[String] = {
+    val pattern = ("(.*?)" + name + "(?:_[\\d.]+)?-" + version + "\\.jar$").r
+    paths.find { path =>
+      pattern.findFirstIn(path).isDefined
+    }
   }
 
   /**
