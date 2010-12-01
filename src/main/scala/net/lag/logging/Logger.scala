@@ -314,7 +314,7 @@ object Logger {
   /**
    * Iterate the Logger objects that have been created.
    */
-  def elements: Iterator[Logger] = loggersCache.values
+  def elements: Iterator[Logger] = loggersCache.values.elements
 
   /**
    * Create a Logger (or find an existing one) and configure it according
