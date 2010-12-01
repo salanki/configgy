@@ -76,20 +76,4 @@ private[configgy] object EnvironmentAttributes extends ConfigMap {
   def copyInto[T <: ConfigMap](m: T) = m
   def inheritFrom: Option[ConfigMap] = None
   def inheritFrom_=(config: Option[ConfigMap]) = error("not implemented")
-
-
-  try {
-    val addr = InetAddress.getLocalHost
-    val ip = addr.getHostAddress
-    val dns = addr.getHostName
-
-    if (ip ne null) {
-      env("HOSTIP") = ip
-    }
-    if (dns ne null) {
-      env("HOSTNAME") = dns
-    }
-  } catch {
-    case _ => // pass
-  }
 }
