@@ -33,7 +33,7 @@ object ThrottledHandlerSpec extends Specification with TestHelper {
 
     "throttle keyed log messages" in {
       val log = Logger()
-      val throttledLog = new ThrottledHandler(handler, 1000, 3)
+      val throttledLog = new ThrottledHandler(handler, 100, 3)
       log.addHandler(throttledLog)
 
       log.error("apple: %s", "help!")
@@ -47,6 +47,22 @@ object ThrottledHandlerSpec extends Specification with TestHelper {
       log.error("apple: %s", "done.")
 
       handler.toString.split("\n").toList mustEqual List("apple: help!", "apple: help 2!", "orange: orange!", "orange: orange!", "apple: help 3!", "(swallowed 2 repeating messages)", "apple: done.")
+    }
+
+    "log the summary even if nothing more is logged with that name" in {
+      val log = Logger()
+      val throttledLog = new ThrottledHandler(handler, 100, 3)
+      log.addHandler(throttledLog)
+      log.error("apple: %s", "help!")
+      log.error("apple: %s", "help!")
+      log.error("apple: %s", "help!")
+      log.error("apple: %s", "help!")
+      log.error("apple: %s", "help!")
+      Thread.sleep(100)
+      throttledLog.lastFlushCheck -= 1000
+      log.error("hello.")
+
+      handler.toString.split("\n").toList mustEqual List("apple: help!", "apple: help!", "apple: help!", "(swallowed 2 repeating messages)", "hello.")
     }
   }
 }
