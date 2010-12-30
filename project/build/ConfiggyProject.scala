@@ -5,7 +5,7 @@ class ConfiggyProject(info: ProjectInfo) extends StandardProject(info) with Subv
   val specs = "org.scala-tools.testing" % "specs_2.8.0" % "1.6.5" % "test"
   val json = buildScalaVersion match {
     case "2.7.7" => "com.twitter" % "json" % "1.1.3"
-    case _ => "com.twitter" % "json_2.8.1" % "2.1.5"
+    case _ => "com.twitter" % "json_2.8.1" % "2.1.6"
   }
 
   override def pomExtra =
