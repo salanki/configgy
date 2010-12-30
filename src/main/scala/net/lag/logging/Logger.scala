@@ -270,6 +270,7 @@ object Logger {
    * exist, a new logger will be created and returned.
    */
   def get(name: String): Logger = {
+    // ko todo: isn't there a concurrency issue on loggersCache? 
     loggersCache.get(name) match {
       case Some(logger) =>
         logger
