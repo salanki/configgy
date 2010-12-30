@@ -279,7 +279,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
     recurse(key) match {
       case Some((attr, name)) => attr.remove(name)
       case None => {
-        cells.removeKey(key) match {
+        cells.remove(key) match {
           case Some(_) => true
           case None => false
         }
