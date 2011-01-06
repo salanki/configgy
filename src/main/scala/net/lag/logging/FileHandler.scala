@@ -135,7 +135,7 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
     }
   }
 
-  def roll() = {
+  def roll() = synchronized {
     stream.close()
     val n = filename.lastIndexOf('.')
     val newFilename = if (n > 0) {
@@ -148,13 +148,18 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
     removeOldFiles()
   }
 
-  def publish(record: javalog.LogRecord) = synchronized {
+  def publish(record: javalog.LogRecord) = {
     try {
-      if (System.currentTimeMillis > nextRollTime) {
-        roll
+      synchronized {
+        if (System.currentTimeMillis > nextRollTime) {
+          roll
+        }
       }
-      stream.write(getFormatter.format(record))
-      stream.flush
+      val formattedLine = getFormatter.format(record)
+      synchronized {
+        stream.write(formattedLine)
+        stream.flush
+      }
     } catch {
       case e =>
         System.err.println(Formatter.formatStackTrace(e, 30).mkString("\n"))
