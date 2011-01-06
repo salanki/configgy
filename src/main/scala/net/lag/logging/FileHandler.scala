@@ -150,8 +150,10 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
 
   def publish(record: javalog.LogRecord) = {
     try {
-      if (System.currentTimeMillis > nextRollTime) {
-        roll
+      synchronized {
+        if (System.currentTimeMillis > nextRollTime) {
+          roll
+        }
       }
       val formattedLine = getFormatter.format(record)
       synchronized {
