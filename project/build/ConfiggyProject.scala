@@ -1,9 +1,8 @@
 import sbt._
 import com.twitter.sbt._
 
-
-class ConfiggyProject(info: ProjectInfo) extends StandardProject(info) with SubversionPublisher {
-  val json = "com.twitter" % "json" % "1.1.3"
+class ConfiggyProject(info: ProjectInfo) extends StandardProject(info) with SubversionPublisher with InlineDependencies {
+  inline("com.twitter" % "json" % "1.1.7")
   val specs = "org.scala-tools.testing" % "specs" % "1.6.2.1" % "test"
 
   override def pomExtra =
