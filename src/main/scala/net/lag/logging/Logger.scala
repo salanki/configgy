@@ -18,7 +18,7 @@ package net.lag.logging
 
 import java.util.{Calendar, logging => javalog}
 import scala.collection.Map
-import scala.collection.mutable
+import scala.collection.{jcl, mutable}
 import net.lag.configgy.ConfigMap
 
 
@@ -275,18 +275,8 @@ object Logger {
     loggersCache.get(name) match {
       case logger: Logger =>
         logger
-      case None =>
-        val logger = new Logger(name, javalog.Logger.getLogger(name))
       case null =>
-        val manager = javalog.LogManager.getLogManager
-        val logger = manager.getLogger(name) match {
-          case null =>
-            val javaLogger = javalog.Logger.getLogger(name)
-            manager.addLogger(javaLogger)
-            new Logger(name, javaLogger)
-          case x: javalog.Logger =>
-            new Logger(name, x)
-        }
+        val logger = new Logger(name, javalog.Logger.getLogger(name))
         logger.setUseParentHandlers(true)
 
         val oldLogger = loggersCache.putIfAbsent(name, logger)
@@ -333,7 +323,7 @@ object Logger {
   /**
    * Iterate the Logger objects that have been created.
    */
-  def elements: Iterator[Logger] = loggersCache.values
+  def elements: Iterator[Logger] = (new jcl.IterableWrapper[Logger] { val underlying = loggersCache.values() }).elements
 
   /**
    * Create a Logger (or find an existing one) and configure it according
