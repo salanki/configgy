@@ -4,7 +4,7 @@ import com.twitter.sbt._
 class ConfiggyProject(info: ProjectInfo) extends StandardProject(info) with SubversionPublisher {
   val specs = "org.scala-tools.testing" % "specs_2.8.1" % "1.6.6" % "test"
   val json = buildScalaVersion match {
-    case "2.7.7" => "com.twitter" % "json" % "1.1.3"
+    case "2.7.7" => "com.twitter" % "json" % "1.1.7"
     case _ => "com.twitter" % "json_2.8.1" % "2.1.6"
   }
 

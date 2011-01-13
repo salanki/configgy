@@ -20,11 +20,23 @@ import _root_.scala.collection.mutable
 import java.util.{logging => javalog}
 
 class ThrottledHandler(wrapped: Handler, val durationMilliseconds: Int, val maxToDisplay: Int) extends Handler(wrapped.formatter) {
-  private class Throttle(now: Long) {
+  private class Throttle(now: Long, name: String, level: javalog.Level) {
     var startTime: Long = now
     var count: Int = 0
 
     override def toString = "Throttle: startTime=" + startTime + " count=" + count
+
+    final def checkFlush(now: Long) {
+      if (now - startTime >= durationMilliseconds) {
+        if (count > maxToDisplay) {
+          val throttledRecord = new javalog.LogRecord(level, "(swallowed %d repeating messages)".format(count - maxToDisplay))
+          throttledRecord.setLoggerName(name)
+          wrapped.publish(throttledRecord)
+        }
+        startTime = now
+        count = 0
+      }
+    }
   }
 
   private val throttleMap = new mutable.HashMap[String, Throttle]
@@ -40,23 +52,26 @@ class ThrottledHandler(wrapped: Handler, val durationMilliseconds: Int, val maxT
   def close() = wrapped.close()
   def flush() = wrapped.flush()
 
+  @volatile var lastFlushCheck: Long = 0
+
   /**
    * Log a message, with sprintf formatting, at the desired level, and
    * attach an exception and stack trace.
    */
   def publish(record: javalog.LogRecord) = {
     val now = System.currentTimeMillis
-    val throttle = throttleMap.synchronized { throttleMap.getOrElseUpdate(record.getMessage(), new Throttle(now)) }
-    throttle.synchronized {
-      if (now - throttle.startTime >= durationMilliseconds) {
-        if (throttle.count > maxToDisplay) {
-          val throttledRecord = new javalog.LogRecord(record.getLevel(), "(swallowed %d repeating messages)".format(throttle.count - maxToDisplay))
-          throttledRecord.setLoggerName(record.getLoggerName())
-          wrapped.publish(throttledRecord)
-        }
-        throttle.startTime = now
-        throttle.count = 0
+    if (now - lastFlushCheck > 1000) {
+      lastFlushCheck = now
+      throttleMap.synchronized {
+        throttleMap.values.foreach { t => t.checkFlush(now) }
       }
+    }
+    val throttle = throttleMap.synchronized {
+      throttleMap.getOrElseUpdate(record.getMessage(),
+                                  new Throttle(now, record.getLoggerName(), record.getLevel()))
+    }
+    throttle.synchronized {
+      throttle.checkFlush(now)
       throttle.count += 1
       if (throttle.count <= maxToDisplay) {
         wrapped.publish(record)
