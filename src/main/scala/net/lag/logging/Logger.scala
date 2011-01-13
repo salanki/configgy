@@ -17,13 +17,13 @@
 package net.lag.logging
 
 import java.util.{Calendar, logging => javalog}
-import scala.collection.Map
-import scala.collection.{jcl, mutable}
+import scala.collection.{JavaConversions, Map}
+import scala.collection.mutable
 import net.lag.configgy.ConfigMap
 
 
 // replace java's ridiculous log levels with the standard ones.
-sealed case class Level(name: String, value: Int) extends javalog.Level(name, value) {
+sealed abstract case class Level(name: String, value: Int) extends javalog.Level(name, value) {
   Logger.levelNamesMap(name) = this
   Logger.levelsMap(value) = this
 }
@@ -323,7 +323,7 @@ object Logger {
   /**
    * Iterate the Logger objects that have been created.
    */
-  def elements: Iterator[Logger] = (new jcl.IterableWrapper[Logger] { val underlying = loggersCache.values() }).elements
+  def elements: Iterator[Logger] = JavaConversions.asScalaIterable(loggersCache.values()).iterator
 
   /**
    * Create a Logger (or find an existing one) and configure it according
