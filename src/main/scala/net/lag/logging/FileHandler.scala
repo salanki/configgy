@@ -165,7 +165,6 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
         }
         if (maxFileSizeBytes != Long.MaxValue) {
           if (new File(filename).length + formattedLine.getBytes("UTF-8").length > maxFileSizeBytes) {
-            println("ROLL!")
             roll
           }
         }
