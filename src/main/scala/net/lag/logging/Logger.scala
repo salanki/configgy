@@ -348,7 +348,8 @@ object Logger {
                        "scribe_buffer_msec", "scribe_backoff_msec",
                        "scribe_max_packet_size", "scribe_category",
                        "throttle_period_msec", "throttle_rate", "handle_sighup",
-                       "scribe_max_buffer", "syslog_priority", "rotate_count")
+                       "scribe_max_buffer", "syslog_priority", "rotate_count",
+                       "max_file_size_bytes")
     var forbidden = config.keys.filter(x => !(allowed contains x)).toList
     if (allowNestedBlocks) {
       forbidden = forbidden.filter(x => !config.getConfigMap(x).isDefined)
@@ -387,7 +388,7 @@ object Logger {
 
     for (filename <- config.getString("filename")) {
       var handleSighup = config.getBool("handle_sighup", false)
-      val policy = config.getString("roll", "never").toLowerCase match {
+      val timeBasedPolicy = config.getString("roll", "never").toLowerCase match {
         case "never" => Never
         case "hourly" => Hourly
         case "daily" => Daily
@@ -400,6 +401,10 @@ object Logger {
         case "saturday" => Weekly(Calendar.SATURDAY)
         case "hup" => handleSighup = true; Never
         case x => throw new LoggingException("Unknown logfile rolling policy: " + x)
+      }
+      val policy = config.getLong("max_file_size_bytes") match {
+        case Some(size) => MaxSize(size)
+        case None => timeBasedPolicy
       }
       val handler =
         new FileHandler(filename, policy, formatter, config.getBool("append", true), handleSighup)

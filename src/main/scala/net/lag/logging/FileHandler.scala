@@ -26,7 +26,7 @@ case object Never extends Policy
 case object Hourly extends Policy
 case object Daily extends Policy
 case class Weekly(dayOfWeek: Int) extends Policy
-
+case class MaxSize(sizeBytes: Long) extends Policy
 
 /**
  * A log handler that writes log entries into a file, and rolls this file
@@ -84,6 +84,7 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
       case Hourly => new SimpleDateFormat("yyyyMMdd-HH")
       case Daily => new SimpleDateFormat("yyyyMMdd")
       case Weekly(_) => new SimpleDateFormat("yyyyMMdd")
+      case MaxSize(_) => new SimpleDateFormat("yyyyMMdd-hhmmss")
     }
     dateFormat.setCalendar(formatter.calendar)
     dateFormat.format(date)
@@ -100,6 +101,8 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
     next.set(Calendar.SECOND, 0)
     next.set(Calendar.MINUTE, 0)
     policy match {
+      case MaxSize(_) =>
+        next.add(Calendar.YEAR, 100)
       case Never =>
         next.add(Calendar.YEAR, 100)
       case Hourly =>
@@ -117,6 +120,11 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
   }
 
   def computeNextRollTime(): Long = computeNextRollTime(System.currentTimeMillis)
+  
+  def maxFileSizeBytes = policy match {
+    case MaxSize(sizeBytes) => sizeBytes
+    case _ => Long.MaxValue
+  }
 
   /**
    * Delete files when "too many" have accumulated.
@@ -154,6 +162,12 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
       synchronized {
         if (System.currentTimeMillis > nextRollTime) {
           roll
+        }
+        if (maxFileSizeBytes != Long.MaxValue) {
+          if (new File(filename).length + formattedLine.getBytes("UTF-8").length > maxFileSizeBytes) {
+            println("ROLL!")
+            roll
+          }
         }
         stream.write(formattedLine)
         stream.flush

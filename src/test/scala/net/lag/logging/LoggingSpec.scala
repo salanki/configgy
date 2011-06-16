@@ -569,5 +569,39 @@ object LoggingSpec extends Specification with TestHelper {
       log1.getHandlers()(1) must haveClass[ScribeHandler]
       log1.getHandlers()(1).getLevel mustEqual Logger.FATAL
     }
+    
+    "rotate log files based on max size" in {
+      withTempFolder {
+        // assuming log prefix of 37 chars, e.g. "FAT [20110615-21:23:08.608] whiskey: "
+        // 90 gives us space for two 7 char log lines (incl endline)
+        val maxSize = 90
+        
+        new File(folderName).list().length mustEqual 0
+
+        val log = Logger.get("net.lag.whiskey.Train")
+        val handler = new FileHandler(folderName + "/test.log", MaxSize(maxSize), new FileFormatter, true, true)
+        log.addHandler(handler)
+
+        log.fatal("log one")
+        Thread.sleep(500)
+        new File(folderName).list.length mustEqual 1
+
+        log.fatal("log two") // should just fit into max size of 90 including prefixes and newlines...
+        Thread.sleep(500)
+        new File(folderName).list.length mustEqual 1
+
+        log.fatal("log three") // should roll since first file is full
+        Thread.sleep(500)
+        new File(folderName).list.length mustEqual 2
+        
+        log.fatal("log four") // shouldn't fit, another causing a roll
+        Thread.sleep(500)
+        new File(folderName).list.length mustEqual 3
+        
+        new File(folderName).list.toList.foreach (f => f.length must beLessThan (maxSize))
+        
+        handler.close()
+      }
+    }
   }
 }
