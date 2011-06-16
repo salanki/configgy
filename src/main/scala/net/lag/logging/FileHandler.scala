@@ -37,6 +37,7 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
   private var stream: Writer = null
   private var openTime: Long = 0
   private var nextRollTime: Long = 0
+  private var bytesWrittenToFile: Long = 0
   var rotateCount = -1
   openLog()
 
@@ -73,6 +74,7 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
     stream = openWriter()
     openTime = System.currentTimeMillis
     nextRollTime = computeNextRollTime()
+    bytesWrittenToFile = 0
   }
 
   /**
@@ -159,17 +161,17 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
   def publish(record: javalog.LogRecord) = {
     try {
       val formattedLine = getFormatter.format(record)
+      val lineSizeBytes = formattedLine.getBytes("UTF-8").length
       synchronized {
         if (System.currentTimeMillis > nextRollTime) {
           roll
         }
-        if (maxFileSizeBytes != Long.MaxValue) {
-          if (new File(filename).length + formattedLine.getBytes("UTF-8").length > maxFileSizeBytes) {
-            roll
-          }
+        if (maxFileSizeBytes != Long.MaxValue && bytesWrittenToFile + lineSizeBytes > maxFileSizeBytes) {
+          roll
         }
         stream.write(formattedLine)
         stream.flush
+        bytesWrittenToFile += lineSizeBytes
       }
     } catch {
       case e =>
