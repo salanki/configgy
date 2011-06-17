@@ -86,7 +86,7 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
       case Hourly => new SimpleDateFormat("yyyyMMdd-HH")
       case Daily => new SimpleDateFormat("yyyyMMdd")
       case Weekly(_) => new SimpleDateFormat("yyyyMMdd")
-      case MaxSize(_) => new SimpleDateFormat("yyyyMMdd-hhmmss")
+      case MaxSize(_) => new SimpleDateFormat("yyyyMMdd-HHmmss")
     }
     dateFormat.setCalendar(formatter.calendar)
     dateFormat.format(date)
@@ -166,7 +166,7 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
         if (System.currentTimeMillis > nextRollTime) {
           roll
         }
-        if (maxFileSizeBytes != Long.MaxValue && bytesWrittenToFile + lineSizeBytes > maxFileSizeBytes) {
+        if (bytesWrittenToFile + lineSizeBytes > maxFileSizeBytes) {
           roll
         }
         stream.write(formattedLine)
