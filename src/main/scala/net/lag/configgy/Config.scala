@@ -48,7 +48,7 @@ private class SubscriptionNode {
     val out = new StringBuilder("%d" format subscribers.size)
     if (map.size > 0) {
       out.append(" { ")
-      for (val key <- map.keys) {
+      for (key <- map.keys) {
         out.append(key)
         out.append("=")
         out.append(map(key).toString)
@@ -67,7 +67,7 @@ private class SubscriptionNode {
     }
 
     // first, call all subscribers for this node.
-    for (val subscriber <- subscribers) {
+    for (subscriber <- subscribers) {
       phase match {
         case VALIDATE_PHASE => subscriber.validate(current, replacement)
         case COMMIT_PHASE => subscriber.commit(current, replacement)
@@ -80,7 +80,7 @@ private class SubscriptionNode {
      */
     var nextNodes: Iterator[(String, SubscriptionNode)] = null
     key match {
-      case Nil => nextNodes = map.elements
+      case Nil => nextNodes = map.iterator
       case segment :: _ => {
         map.get(segment) match {
           case None => return     // done!
@@ -89,7 +89,7 @@ private class SubscriptionNode {
       }
     }
 
-    for (val (segment, node) <- nextNodes) {
+    for ((segment, node) <- nextNodes) {
       val subCurrent = current match {
         case None => None
         case Some(x) => x.getConfigMap(segment)
@@ -187,7 +187,7 @@ class Config extends ConfigMap {
     nextKey += 1
     var node = subscribers
     if (key ne null) {
-      for (val segment <- key.split("\\.")) {
+      for (segment <- key.split("\\.")) {
         node = node.get(segment)
       }
     }
@@ -207,7 +207,7 @@ class Config extends ConfigMap {
 
   def subscribe(subscriber: Subscriber) = subscribe(null.asInstanceOf[String], subscriber)
 
-  override def subscribe(f: (Option[ConfigMap]) => Unit) = subscribe(null.asInstanceOf[String])(f)
+  override def subscribe(f: (Option[ConfigMap]) => Unit): SubscriptionKey = subscribe(null.asInstanceOf[String])(f)
 
   private[configgy] def unsubscribe(subkey: SubscriptionKey) = synchronized {
     subscriberKeys.get(subkey.id) match {
@@ -403,7 +403,7 @@ object Config {
    */
   def fromMap(m: Map[String, String]) = {
     val config = new Config
-    for ((k, v) <- m.elements) {
+    for ((k, v) <- m.iterator) {
       config(k) = v
     }
     config

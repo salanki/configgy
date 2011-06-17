@@ -19,7 +19,7 @@ package net.lag.logging
 import java.io.{File, FileOutputStream, OutputStreamWriter, Writer}
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date, logging => javalog}
-
+import net.lag.HandleSignal
 
 sealed abstract class Policy
 case object Never extends Policy

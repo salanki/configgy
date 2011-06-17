@@ -54,8 +54,11 @@ class SunSignalHandler extends SignalHandler {
       new reflect.InvocationHandler {
         def invoke(proxy: Object, method: reflect.Method, args: Array[Object]) = {
           if (method.getName() == "handle") {
-            handlers(signal).foreach(_(nameMethod.invoke(args(0)).asInstanceOf[String]))
+            handlers(signal).foreach { x =>
+              x(nameMethod.invoke(args(0)).asInstanceOf[String])
+            }
           }
+          null
         }
       }).asInstanceOf[Object]
 

@@ -477,6 +477,7 @@ class ConfigParserSpec extends Specification {
       a("irc.server") mustEqual "irc.example.com"
     }
 
+/*
     "read a really long list of strings without recursing to death" in {
       skip("not fixed yet")
       val c = new Config
@@ -484,5 +485,6 @@ class ConfigParserSpec extends Specification {
       c.load("include \"evil.conf\"\n")
       c.getList("things").size mustEqual 1000
     }
+    */
   }
 }

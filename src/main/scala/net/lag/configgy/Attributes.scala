@@ -44,7 +44,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
     copyFrom.copyInto(this)
   }
 
-  def keys: Iterator[String] = cells.keys
+  def keys: Iterator[String] = cells.keysIterator
 
   def getName() = name
 
@@ -56,7 +56,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
       case None => ""
     })
     buffer ++= ": "
-    for (val key <- sortedKeys) {
+    for (key <- sortedKeys) {
       buffer ++= key
       buffer ++= "="
       buffer ++= (cells(key) match {
@@ -146,10 +146,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 
   def replaceWith(newAttributes: Attributes): Unit = {
     // stash away subnodes and reinsert them.
-    val subnodes = cells.map {
-      case (key, cell: AttributesCell) => (key, cell)
-      case _ => null
-    }.filter { _ ne null }.toList
+    val subnodes = for ((key, cell @ AttributesCell(_)) <- cells.toList) yield (key, cell)
     cells.clear
     cells ++= newAttributes.cells
     for ((key, cell) <- subnodes) {
@@ -282,7 +279,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
     recurse(key) match {
       case Some((attr, name)) => attr.remove(name)
       case None => {
-        cells.removeKey(key) match {
+        cells.remove(key) match {
           case Some(_) => true
           case None => false
         }
@@ -292,13 +289,13 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 
   def asMap: Map[String, String] = {
     var ret = immutable.Map.empty[String, String]
-    for (val (key, value) <- cells) {
+    for ((key, value) <- cells) {
       value match {
-        case StringCell(x) => ret = ret.update(key, x)
-        case StringListCell(x) => ret = ret.update(key, x.mkString("[", ",", "]"))
+        case StringCell(x) => ret = ret.updated(key, x)
+        case StringListCell(x) => ret = ret.updated(key, x.mkString("[", ",", "]"))
         case AttributesCell(x) =>
-          for (val (k, v) <- x.asMap) {
-            ret = ret.update(key + "." + k, v)
+          for ((k, v) <- x.asMap) {
+            ret = ret.updated(key + "." + k, v)
           }
       }
     }
@@ -373,7 +370,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
     }
 
     monitored = true
-    for (val cell <- cells.values) {
+    for (cell <- cells.values) {
       cell match {
         case AttributesCell(x) => x.setMonitored
         case _ => // pass
@@ -393,7 +390,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
       case Some(a: Attributes) => a.copyInto(attr)
       case _ =>
     }
-    for (val (key, value) <- cells.elements) {
+    for ((key, value) <- cells.iterator) {
       value match {
         case StringCell(x) => attr(key) = x
         case StringListCell(x) => attr(key) = x

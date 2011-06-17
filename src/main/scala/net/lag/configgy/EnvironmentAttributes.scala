@@ -17,26 +17,23 @@
 package net.lag.configgy
 
 import java.net.InetAddress
-import scala.collection.{immutable, jcl, mutable}
-
-
-// grr, scala can wrap any specific java Map type, but not the generic Map. why not?
-private class JavaMap[K, E](override val underlying: java.util.Map[K, E]) extends jcl.MapWrapper[K, E]
-
+import scala.collection.{immutable, mutable}
+import scala.collection.JavaConversions
 
 /**
  * A ConfigMap that wraps the system environment. This is used as a
  * fallback when looking up "$(...)" substitutions in config files.
  */
 private[configgy] object EnvironmentAttributes extends ConfigMap {
-  private val env = immutable.Map.empty[String, String] ++ (new JavaMap(System.getenv()).elements)
+
+  private val env = immutable.Map.empty[String, String] ++ (JavaConversions.asMap(System.getenv()).iterator)
 
   // deal with java.util.Properties extending
   // java.util.Hashtable[Object, Object] and not
   // java.util.Hashtable[String, String]
   private def getSystemProperties(): mutable.HashMap[String,String] = {
     val map = new mutable.HashMap[String, String]
-    for (entry <- new jcl.Hashtable(System.getProperties()).elements) {
+    for (entry <- JavaConversions.asMap(System.getProperties()).iterator) {
       entry match {
         case (k: String, v: String) => map.put(k, v)
         case _ =>
@@ -68,7 +65,7 @@ private[configgy] object EnvironmentAttributes extends ConfigMap {
   }
 
   def remove(key: String): Boolean = error("read-only attributes")
-  def keys: Iterator[String] = (getSystemProperties().keySet ++ env.keySet).elements
+  def keys: Iterator[String] = (getSystemProperties().keySet ++ env.keySet).iterator
   def asMap(): Map[String, String] = error("not implemented")
   def toConfigString = error("not implemented")
   def subscribe(subscriber: Subscriber): SubscriptionKey = error("not implemented")

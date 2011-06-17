@@ -17,13 +17,13 @@
 package net.lag.logging
 
 import java.util.{Calendar, logging => javalog}
-import scala.collection.Map
-import scala.collection.{jcl, mutable}
+import scala.collection.{JavaConversions, Map}
+import scala.collection.mutable
 import net.lag.configgy.ConfigMap
 
 
 // replace java's ridiculous log levels with the standard ones.
-sealed case class Level(name: String, value: Int) extends javalog.Level(name, value) {
+sealed abstract case class Level(name: String, value: Int) extends javalog.Level(name, value) {
   Logger.levelNamesMap(name) = this
   Logger.levelsMap(value) = this
 }
@@ -97,7 +97,7 @@ class Logger private(val name: String, private val wrapped: javalog.Logger) {
     if ((myLevel eq null) || (level.intValue >= myLevel.intValue)) {
       val record = new javalog.LogRecord(level, message)
       if (items.size > 0) {
-        record.setParameters(items.toArray.asInstanceOf[Array[Object]])
+        record.setParameters(items.toArray[Any].asInstanceOf[Array[AnyRef]])
       }
       record.setLoggerName(wrapped.getName)
       if (thrown ne null) {
@@ -231,12 +231,12 @@ object Logger {
   /**
    * Return a map of log level values to the corresponding Level objects.
    */
-  def levels: Map[Int, Level] = levelsMap.readOnly
+  def levels: Map[Int, Level] = levelsMap
 
   /**
    * Return a map of log level names to the corresponding Level objects.
    */
-  def levelNames: Map[String, Level] = levelNamesMap.readOnly
+  def levelNames: Map[String, Level] = levelNamesMap
 
   /**
    * Reset logging to an initial state, where all logging is set at
@@ -323,7 +323,7 @@ object Logger {
   /**
    * Iterate the Logger objects that have been created.
    */
-  def elements: Iterator[Logger] = (new jcl.IterableWrapper[Logger] { val underlying = loggersCache.values() }).elements
+  def elements: Iterator[Logger] = JavaConversions.asScalaIterable(loggersCache.values()).iterator
 
   /**
    * Create a Logger (or find an existing one) and configure it according

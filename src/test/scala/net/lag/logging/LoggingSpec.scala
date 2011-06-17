@@ -22,7 +22,7 @@ import _root_.java.util.{Calendar, Date, TimeZone, logging => javalog}
 import _root_.org.specs._
 import _root_.net.lag.configgy.Config
 import _root_.net.lag.extensions._
-
+import net.lag.TestHelper
 
 object Crazy {
   def cycle(n: Int): Unit = {
@@ -90,7 +90,7 @@ object LoggingSpec extends Specification with TestHelper {
 
   // turn logged console lines into a list of repeatable strings
   private def eat(in: String): List[String] = {
-    for (val line <- in.split("\n").toList) yield {
+    for (line <- in.split("\n").toList) yield {
       line.regexSub("""LoggingSpec.scala:\d+""".r) { m => "LoggingSpec.scala:NNN" }
     }.regexSub("""LoggingSpec\$[\w\$]+""".r) {
       m => "LoggingSpec$$"
