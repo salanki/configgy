@@ -369,19 +369,19 @@ object LoggingSpec extends Specification with TestHelper {
 
         val log = Logger.get("net.lag.whiskey.Train")
         val handler = new FileHandler(folderName + "/test.log", Hourly, new FileFormatter, true, true)
-        handler.rotateCount = 2
+        handler.rotateCount = 1
         log.addHandler(handler)
 
+        val folder = new File(folderName)
+
         log.fatal("first file")
-        new File(folderName).list().length mustEqual 1
+        folder.list().length mustEqual 1
+        folder.list() must contain("test.log")
         handler.roll()
 
         log.fatal("second file")
-        new File(folderName).list().length mustEqual 2
-        handler.roll()
-
-        log.fatal("third file")
-        new File(folderName).list().length mustEqual 2
+        folder.list().length mustEqual 1
+        folder.list() must contain("test.log")
         handler.close()
       }
     }
