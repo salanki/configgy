@@ -134,7 +134,7 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
    */
   private def removeOldFiles(filenamePrefix: String) = {
     if (rotateCount >= 0) {
-      val filesInLogDir = new File(filename).getParentFile().listFiles()
+      val filesInLogDir = new File(filename).getCanonicalFile.getParentFile.listFiles
       val rotatedFiles = filesInLogDir.filter(f => f.getName != filename &&
         f.getName.startsWith(new File(filenamePrefix).getName)).sortBy(_.getName)
 
