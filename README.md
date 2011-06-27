@@ -7,8 +7,9 @@ Configgy was a library that handled two separate things:
 - setting up basic logging
 - loading config files
 
-Logging has moved into <https://github.com/twitter/util/tree/master/util-logging>, which requires
-scala 2.8 but is slightly more idiomatic, and removes the need for a config file, because:
+Logging has moved into [util-logging](https://github.com/twitter/util/tree/master/util-logging),
+which requires scala 2.8 but is slightly more idiomatic, and removes the need for a config file,
+because:
 
 Configuration is usually done from within [ostrich](https://github.com/twitter/ostrich) by loading
 and interpreting a scala file. This has several advantages, not the least of which is type checking
