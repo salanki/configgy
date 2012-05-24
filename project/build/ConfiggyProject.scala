@@ -23,5 +23,5 @@ class ConfiggyProject(info: ProjectInfo) extends StandardProject(info) with Subv
       </license>
     </licenses>
 
-  override def subversionRepository = Some("http://svn.local.twitter.com/maven-public")
+  override def subversionRepository = Some("https://svn.twitter.biz/maven-public")
 }
