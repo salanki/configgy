@@ -26,7 +26,7 @@ case object Never extends Policy
 case object Hourly extends Policy
 case object Daily extends Policy
 case class Weekly(dayOfWeek: Int) extends Policy
-
+case class MaxSize(sizeBytes: Long) extends Policy
 
 /**
  * A log handler that writes log entries into a file, and rolls this file
@@ -37,6 +37,7 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
   private var stream: Writer = null
   private var openTime: Long = 0
   private var nextRollTime: Long = 0
+  private var bytesWrittenToFile: Long = 0
   var rotateCount = -1
   openLog()
 
@@ -73,6 +74,7 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
     stream = openWriter()
     openTime = System.currentTimeMillis
     nextRollTime = computeNextRollTime()
+    bytesWrittenToFile = 0
   }
 
   /**
@@ -84,6 +86,7 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
       case Hourly => new SimpleDateFormat("yyyyMMdd-HH")
       case Daily => new SimpleDateFormat("yyyyMMdd")
       case Weekly(_) => new SimpleDateFormat("yyyyMMdd")
+      case MaxSize(_) => new SimpleDateFormat("yyyyMMdd-HHmmss")
     }
     dateFormat.setCalendar(formatter.calendar)
     dateFormat.format(date)
@@ -100,6 +103,8 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
     next.set(Calendar.SECOND, 0)
     next.set(Calendar.MINUTE, 0)
     policy match {
+      case MaxSize(_) =>
+        next.add(Calendar.YEAR, 100)
       case Never =>
         next.add(Calendar.YEAR, 100)
       case Hourly =>
@@ -117,6 +122,11 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
   }
 
   def computeNextRollTime(): Long = computeNextRollTime(System.currentTimeMillis)
+  
+  def maxFileSizeBytes = policy match {
+    case MaxSize(sizeBytes) => sizeBytes
+    case _ => Long.MaxValue
+  }
 
   /**
    * Delete files when "too many" have accumulated.
@@ -148,12 +158,17 @@ class FileHandler(val filename: String, val policy: Policy, formatter: Formatter
   def publish(record: javalog.LogRecord) = {
     try {
       val formattedLine = getFormatter.format(record)
+      val lineSizeBytes = formattedLine.getBytes("UTF-8").length
       synchronized {
         if (System.currentTimeMillis > nextRollTime) {
           roll
         }
+        if (bytesWrittenToFile + lineSizeBytes > maxFileSizeBytes) {
+          roll
+        }
         stream.write(formattedLine)
         stream.flush
+        bytesWrittenToFile += lineSizeBytes
       }
     } catch {
       case e =>
