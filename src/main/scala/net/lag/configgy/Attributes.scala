@@ -93,11 +93,6 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
       cells.get(elems(0)) match {
         case Some(AttributesCell(x)) => x.lookupCell(elems(1))
 	case None => inherits.find(_.lookupCell(key) isDefined).map(_.lookupCell(key).get)
-       /* case None => inheritFrom match {
-          case Some(a: Attributes) =>
-            a.lookupCell(key)
-          case _ => None
-        } */
         case _ => None
       }
     } else {
@@ -339,7 +334,12 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
     s match {
       case Nil => None
       case head :: tail =>
-	  cm.getString(s.reverse.mkString(".")+"."+v) match {
+	  val str = s.reverse.mkString(".") match {
+	    case "" => v
+	    case str if str.endsWith(".") => str + v
+	    case other => other+"."+v
+	  }
+	  cm.getString(str) match {
 	    case None => getStringRecursed(v, tail, cm)
 	    case x: Some[_] => x
       }
@@ -350,7 +350,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 
       path match {
         case Nil => ""
-        case attr :: xs => getStringRecursed(key, section.split('.').toList.reverse, attr)  match {
+        case attr :: xs => getStringRecursed(key, ("" :: section.split('.').toList).reverse, attr)  match {
           case Some(x) => x
           case None => lookup(key, xs)
         }
