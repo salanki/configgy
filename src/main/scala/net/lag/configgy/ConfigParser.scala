@@ -33,11 +33,7 @@ class ParseException(reason: String, cause: Throwable) extends Exception(reason,
 }
 
 
-private[configgy] class ConfigParser(var attr: Attributes, val importer: Importer) extends RegexParsers {
-
-  val sections = new Stack[String]
-  var prefix = ""
-
+private[configgy] class ConfigParser(var attr: Attributes, val importer: Importer, val sections: Stack[String] = new Stack[String], var prefix: String = "") extends RegexParsers {
   // Stack reversed iteration order from 2.7 to 2.8!!
   def sectionsString = sections.toList.reverse.mkString(".")
 
@@ -55,7 +51,8 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
 
   def includeFile = "include" ~> string ^^ {
     case filename: String =>
-      new ConfigParser(attr.makeAttributes(sectionsString), importer) parse importer.importFile(filename)
+      new ConfigParser(attr, importer, sections, prefix) parse importer.importFile(filename)
+
   }
 
   def includeOptFile = "include?" ~> string ^^ {
@@ -88,6 +85,17 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
   }
   def sectionCloseBrace = "}" ^^ { x => closeBlock(None) }
 
+  private def getConfigMapRecursed(v: String, s: List[String]): Option[Attributes] =
+    s match {
+      case Nil => None
+      case head :: tail =>
+	  val parent =  attr.makeAttributes(tail.reverse.mkString("."))
+	  parent.getConfigMap(v) match {
+	    case None => getConfigMapRecursed(v, tail)
+	    case x: Some[_] => Some(parent.makeAttributes(v))
+      }
+    }
+
   private def openBlock(name: String, attrList: List[(String, String)]) = {
     val parent = if (sections.size > 0) attr.makeAttributes(sectionsString) else attr
     sections push name
@@ -95,7 +103,10 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
     val newBlock = attr.makeAttributes(sectionsString)
     for ((k, v) <- attrList) k match {
       case "inherit" =>
-        newBlock.inheritFrom = Some(if (parent.getConfigMap(v).isDefined) parent.makeAttributes(v) else attr.makeAttributes(v))
+        newBlock.inherits = (for(x <- v.split(',')) yield getConfigMapRecursed(x, sections.toList) match {
+	  case Some(a) => a
+	  case None => attr.makeAttributes(v)
+	}).toList
       case _ =>
         throw new ParseException("Unknown block modifier")
     }

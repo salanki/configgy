@@ -324,8 +324,8 @@ class Config extends ConfigMap {
   def toConfigString = root.toConfigString
   def copy(): ConfigMap = root.copy()
   def copyInto[T <: ConfigMap](m: T): T = root.copyInto(m)
-  def inheritFrom = root.inheritFrom
-  def inheritFrom_=(config: Option[ConfigMap]) = root.inheritFrom=(config)
+  def inherits = root.inherits
+  def inherits_=(config: List[Attributes]) = root.inherits=(config)
   def getName(): String = root.name
 }
 

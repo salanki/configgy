@@ -37,7 +37,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 
   private val cells = new mutable.HashMap[String, Cell]
   private var monitored = false
-  var inheritFrom: Option[ConfigMap] = None
+  var inherits: List[Attributes] = Nil
 
   def this(config: Config, name: String, copyFrom: ConfigMap) = {
     this(config, name)
@@ -51,9 +51,9 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
   override def toString() = {
     val buffer = new StringBuilder("{")
     buffer ++= name
-    buffer ++= (inheritFrom match {
-      case Some(a: Attributes) => " (inherit=" + a.name + ")"
-      case None => ""
+    buffer ++= (inherits match {
+      case Nil => ""
+      case a : List[_] => " (inherit=" + a.map(_.name).mkString(",") + ")"
     })
     buffer ++= ": "
     for (key <- sortedKeys) {
@@ -92,20 +92,18 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
     if (elems.length > 1) {
       cells.get(elems(0)) match {
         case Some(AttributesCell(x)) => x.lookupCell(elems(1))
-        case None => inheritFrom match {
+	case None => inherits.find(_.lookupCell(key) isDefined).map(_.lookupCell(key).get)
+       /* case None => inheritFrom match {
           case Some(a: Attributes) =>
             a.lookupCell(key)
           case _ => None
-        }
+        } */
         case _ => None
       }
     } else {
       cells.get(elems(0)) match {
         case x @ Some(_) => x
-        case None => inheritFrom match {
-          case Some(a: Attributes) => a.lookupCell(key)
-          case _ => None
-        }
+	case None => inherits.find(_.lookupCell(key) isDefined).map(_.lookupCell(key).get)
       }
     }
   }
@@ -155,6 +153,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
           cell.attr.replaceWith(newattr)
           cells(key) = cell
         case None =>
+	  println("Config: Can't find variable substitution: "+key)
           cell.attr.replaceWith(new Attributes(config, ""))
       }
     }
@@ -317,7 +316,10 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
           buffer ++= x.map { "  \"" + _.quoteC + "\"," }
           buffer += "]"
         case AttributesCell(node) =>
-          buffer += (key + node.inheritFrom.map { " (inherit=\"" + _.asInstanceOf[Attributes].name + "\")" }.getOrElse("") + " {")
+          buffer += (key + (inherits match {
+      case Nil => ""
+      case a : List[_] => " (inherit=" + a.map(_.name).mkString(",") + ")"
+    }) + " {")
           buffer ++= node.toConfigList().map { "  " + _ }
           buffer += "}"
       }
@@ -333,11 +335,22 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
   // (and find "\$" and replace them with "$")
   private val INTERPOLATE_RE = """(?<!\\)\$\((\w[\w\d\._-]*)\)|\\\$""".r
 
-  protected[configgy] def interpolate(root: Attributes, s: String): String = {
+  private def getStringRecursed(v: String, s: List[String], cm: ConfigMap): Option[String] =
+    s match {
+      case Nil => None
+      case head :: tail =>
+	  cm.getString(s.reverse.mkString(".")+"."+v) match {
+	    case None => getStringRecursed(v, tail, cm)
+	    case x: Some[_] => x
+      }
+    }
+
+  protected[configgy] def interpolate(root: Attributes, s: String, section: String): String = {
     def lookup(key: String, path: List[ConfigMap]): String = {
+
       path match {
         case Nil => ""
-        case attr :: xs => attr.getString(key) match {
+        case attr :: xs => getStringRecursed(key, section.split('.').toList.reverse, attr)  match {
           case Some(x) => x
           case None => lookup(key, xs)
         }
@@ -355,8 +368,8 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 
   protected[configgy] def interpolate(key: String, s: String): String = {
     recurse(key) match {
-      case Some((attr, name)) => attr.interpolate(this, s)
-      case None => interpolate(this, s)
+      case Some((attr, name)) => attr.interpolate(this, s, key)
+      case None => interpolate(this, s, key)
     }
   }
 
@@ -386,10 +399,8 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
   }
 
   def copyInto[T <: ConfigMap](attr: T): T = {
-    inheritFrom match {
-      case Some(a: Attributes) => a.copyInto(attr)
-      case _ =>
-    }
+    inherits.foreach(_.copyInto(attr))
+ 
     for ((key, value) <- cells.iterator) {
       value match {
         case StringCell(x) => attr(key) = x

@@ -142,12 +142,12 @@ trait ConfigMap {
    * Any attributes that aren't explicitly set will fall back to the inherited
    * ConfigMap on lookup.
    */
-  def inheritFrom_=(config: Option[ConfigMap]): Unit
+  def inherits_=(config: List[Attributes]): Unit
 
   /**
    * Return any ConfigMap that is used as a fall back on lookups.
    */
-  def inheritFrom: Option[ConfigMap]
+  def inherits: List[Attributes]
 
 
   // -----  convenience methods
