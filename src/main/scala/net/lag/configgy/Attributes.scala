@@ -340,7 +340,10 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 	    case other => other+"."+v
 	  }
 	  cm.getString(str) match {
-	    case None => getStringRecursed(v, tail, cm)
+	    case None => cm.getString("."+str) match {
+	      case None => getStringRecursed(v, tail, cm)
+	      case x: Some[_] => x
+	    }
 	    case x: Some[_] => x
       }
     }
