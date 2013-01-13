@@ -334,16 +334,14 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
     s match {
       case Nil => None
       case head :: tail =>
-	  val str = s.reverse.mkString(".") match {
+	  val str = tail.reverse.mkString(".") match {
 	    case "" => v
 	    case str if str.endsWith(".") => str + v
 	    case other => other+"."+v
 	  }
+
 	  cm.getString(str) match {
-	    case None => cm.getString("."+str) match {
-	      case None => getStringRecursed(v, tail, cm)
-	      case x: Some[_] => x
-	    }
+	    case None => getStringRecursed(v, tail, cm)
 	    case x: Some[_] => x
       }
     }
@@ -353,7 +351,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 
       path match {
         case Nil => ""
-        case attr :: xs => getStringRecursed(key, ("" :: section.split('.').toList).reverse, attr)  match {
+        case attr :: xs => getStringRecursed(key, "" :: section.split('.').toList.reverse, attr)  match {
           case Some(x) => x
           case None => lookup(key, xs)
         }
