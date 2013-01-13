@@ -1,25 +1,21 @@
 
-Configgy is deprecated
-======================
+CONFIGGY
+========
 
-Configgy was a library that handled two separate things:
+Configgy is a library for handling config files and logging for a scala
+daemon. The idea is that it should be simple and straightforward, allowing
+you to plug it in and get started quickly.
 
-- setting up basic logging
-- loading config files
 
-Logging has moved into [util-logging](https://github.com/twitter/util/tree/master/util-logging),
-which requires scala 2.8 but is slightly more idiomatic, and removes the need for a config file,
-because:
 
-Configuration is usually done from within [ostrich](https://github.com/twitter/ostrich) by loading
-and interpreting a scala file. This has several advantages, not the least of which is type checking
-and validation, and is described a bit more in the ostrich README. The base classes for defining
-and loading config files are in [util-core](https://github.com/twitter/util/tree/master/util-core)
-and [util-eval](https://github.com/twitter/util/tree/master/util-eval).
+Salanki changes are in the salanki branch, the improvments are:
 
-Old versions of configgy are preserved on branches. I do still accept & merge patches for these
-branches to help maintain code that still uses it.
+Added multiple inheritance:
 
-- scala 2.7: branch "release-1.6"
-- scala 2.8: branch "release-2.0"
-- scala 2.9: branch "scala-2.9"
+sub (inherit="a,b") {
+…
+}
+
+Made including config files work as if the included file was actually just cut-and-pasted in the file it was included from
+Made searches for inherits recursive for multiple nesting level. Starts search from current level and then goes down each level to the root
+Made searches for variable substitutions recursive the same way as inherits.
