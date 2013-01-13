@@ -8,7 +8,7 @@ you to plug it in and get started quickly.
 
 
 
-Salanki changes are in the salanki branch, the improvments are:
+Salanki changes are in the salanki branch, the improvements are:
 
 Added multiple inheritance:
 
