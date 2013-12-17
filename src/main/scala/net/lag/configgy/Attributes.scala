@@ -20,6 +20,7 @@ import java.util.regex.Pattern
 import javax.{management => jmx}
 import scala.collection.{immutable, mutable, Map}
 import scala.util.Sorting
+import de.congrace.exp4j.ExpressionBuilder
 import net.lag.extensions._
 
 
@@ -148,8 +149,9 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
           cell.attr.replaceWith(newattr)
           cells(key) = cell
         case None =>
-	  println("Config: Can't find variable substitution: "+key)
+	  throw new ConfigException("Config: Can't find variable substitution: "+key) /* Need to log or throw exception */
           cell.attr.replaceWith(new Attributes(config, ""))
+	case Some(_) => throw new ConfigException("Cell that is not AttributesCell in replaceWith")
       }
     }
   }
@@ -358,13 +360,21 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
       }
     }
 
-    s.regexSub(INTERPOLATE_RE) { m =>
+    val replaced = s.regexSub(INTERPOLATE_RE) { m =>
       if (m.matched == "\\$") {
         "$"
       } else {
         lookup(m.group(1), List(this, root, EnvironmentAttributes))
       }
     }
+
+    if(s != replaced) {
+     try {
+      new ExpressionBuilder(replaced).build().calculate().toLong.toString
+     } catch {
+       case e: Exception => replaced
+     }
+    } else replaced
   }
 
   protected[configgy] def interpolate(key: String, s: String): String = {

@@ -18,12 +18,9 @@ package net.lag.configgy
 
 import javax.{management => jmx}
 import scala.collection.JavaConversions
-import net.lag.logging.Logger
 
 
 class JmxWrapper(node: Attributes) extends jmx.DynamicMBean {
-
-  private val log = Logger.get
 
   val operations: Array[jmx.MBeanOperationInfo] = Array(
     new jmx.MBeanOperationInfo("set", "set a string value",
@@ -69,7 +66,7 @@ class JmxWrapper(node: Attributes) extends jmx.DynamicMBean {
               node.setString(name, value)
             } catch {
               case e: Exception =>
-                log.warning("exception: %s", e.getMessage)
+              // log.warning("exception: %s", e.getMessage)
                 throw e
             }
           case _ =>
@@ -92,7 +89,7 @@ class JmxWrapper(node: Attributes) extends jmx.DynamicMBean {
       case "remove_list" =>
         params match {
           case Array(name: String, value: String) =>
-            node.setList(name, node.getList(name).toList - value)
+            node.setList(name, node.getList(name).toList.filter(_ != value))
           case _ =>
             throw new jmx.MBeanException(new Exception("bad signature " + params.toList.toString))
         }
@@ -112,7 +109,7 @@ class JmxWrapper(node: Attributes) extends jmx.DynamicMBean {
   }
 
   def setAttributes(attrs: jmx.AttributeList): jmx.AttributeList = {
-    for (attr <- JavaConversions.asBuffer(attrs.asList)) setAttribute(attr)
+    for (attr <- JavaConversions.asScalaBuffer(attrs.asList)) setAttribute(attr)
     attrs
   }
 }

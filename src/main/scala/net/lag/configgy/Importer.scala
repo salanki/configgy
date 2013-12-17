@@ -64,7 +64,7 @@ trait Importer {
     try {
       in.close()
     } catch {
-      case _ =>
+      case _: Exception =>
     }
     out.toString
   }
@@ -87,7 +87,7 @@ class FilesystemImporter(val baseFolder: String) extends Importer {
       try {
         streamToString(new FileInputStream(f))
       } catch {
-        case x => throw new ParseException(x.toString)
+        case x:Exception => throw new ParseException(x.toString)
       }
     }
   }
@@ -111,7 +111,7 @@ class ResourceImporter(classLoader: ClassLoader) extends Importer {
         streamToString(stream)
       }
     } catch {
-      case x => throw new ParseException(x.toString)
+      case x:Exception => throw new ParseException(x.toString)
     }
   }
 }

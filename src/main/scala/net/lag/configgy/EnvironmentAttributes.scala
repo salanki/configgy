@@ -26,14 +26,14 @@ import scala.collection.JavaConversions
  */
 private[configgy] object EnvironmentAttributes extends ConfigMap {
 
-  private val env = immutable.Map.empty[String, String] ++ (JavaConversions.asMap(System.getenv()).iterator)
+  private val env = immutable.Map.empty[String, String] ++ (JavaConversions.mapAsScalaMap(System.getenv()).iterator)
 
   // deal with java.util.Properties extending
   // java.util.Hashtable[Object, Object] and not
   // java.util.Hashtable[String, String]
   private def getSystemProperties(): mutable.HashMap[String,String] = {
     val map = new mutable.HashMap[String, String]
-    for (entry <- JavaConversions.asMap(System.getProperties()).iterator) {
+    for (entry <- JavaConversions.mapAsScalaMap(System.getProperties()).iterator) {
       entry match {
         case (k: String, v: String) => map.put(k, v)
         case _ =>
