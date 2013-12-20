@@ -66,6 +66,7 @@ trait Importer {
     } catch {
       case _: Exception =>
     }
+    println(out.toString)
     out.toString
   }
 }
@@ -85,7 +86,7 @@ class FilesystemImporter(val baseFolder: String) extends Importer {
       ""
     } else {
       try {
-        streamToString(new FileInputStream(f))
+        scala.io.Source.fromFile(f).mkString
       } catch {
         case x:Exception => throw new ParseException(x.toString)
       }
@@ -108,6 +109,7 @@ class ResourceImporter(classLoader: ClassLoader) extends Importer {
         }
         ""
       } else {
+        throw new RuntimeException("This probably broke when upgrading to Scala 2.10")
         streamToString(stream)
       }
     } catch {
