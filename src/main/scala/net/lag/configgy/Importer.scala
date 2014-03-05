@@ -66,7 +66,6 @@ trait Importer {
     } catch {
       case _: Exception =>
     }
-    println(out.toString)
     out.toString
   }
 }
