@@ -17,3 +17,11 @@ object LongExtractor {
       case _: NumberFormatException => None
     }
 }
+
+object BooleanExtractor {
+  def unapply(x: String): Option[Boolean] = x match {
+    case ConfigMap.TRUE => Some(true)
+    case ConfigMap.FALSE => Some(false)
+    case _ => None
+  }
+}

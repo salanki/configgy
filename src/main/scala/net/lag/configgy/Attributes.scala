@@ -51,7 +51,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 
   def keyToString(key: String): List[String] =
     cells(key) match {
-      case StringCell(x) => stringOrIntToString(x) :: Nil
+      case StringCell(x) => stringOrIntOrBoolToString(x) :: Nil
       case AttributesCell(x) => x.toString :: Nil
       case StringListCell(x) => x.mkString("[", ",", "]") :: Nil
       case ConfigValueCell(x) => x.toString :: Nil
@@ -354,13 +354,13 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
   }
 
   def keyToStringList(key: String): List[String] = cells(key) match {
-    case StringCell(x) => stringOrIntToString(x) :: Nil 
-    case StringListCell(x) if x.size < 4 => ("[" + x.map(stringOrIntToString).mkString(", ") + "]") :: Nil // ??
+    case StringCell(x) => stringOrIntOrBoolToString(x) :: Nil 
+    case StringListCell(x) if x.size < 4 => ("[" + x.map(stringOrIntOrBoolToString).mkString(", ") + "]") :: Nil // ??
     case StringListCell(x) =>
       "[" ::
-        x.toList.map { "  \"" + _.quoteC + "\"," } :::
+        x.toList.map { "  " + stringOrIntOrBoolToString(_) + "," } :::
         "]" :: Nil
-    case ConfigValueCell(node) => "Blopp" :: Nil /* TODO: Typeclass for converting ConfigValue to text here */
+    case ConfigValueCell(node) => node.toConfigStringList
   }
 
   def toConfigString: String = {
@@ -392,8 +392,9 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
     buffer.toList
   }
   
-  private def stringOrIntToString(s: String) = s match {
+  private def stringOrIntOrBoolToString(s: String) = s match {
     case LongExtractor(x) => x.toString
+    case BooleanExtractor(x) => x.toString
     case x => "\""+x.quoteC+"\""
   }
 

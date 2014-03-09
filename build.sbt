@@ -1,6 +1,6 @@
 name := "Configgy"
 
-version := "2.0.3-SALANKI"
+version := "2.1.0-SALANKI"
 
 organization := "net.lag"
 

@@ -115,7 +115,13 @@ class ConfigSpec extends UnitSpec {
         }
 
         "convert to a ConfigString" in {
-          assert(config.toConfigString == "objList = [{intValue = 1 stringValue = \"b\"}]]\n")
+          assert(config.toConfigString == """objList = [
+  {,
+    intValue = 1,
+    stringValue = "b",
+  },
+]
+""")
         }
       }
 
@@ -279,8 +285,7 @@ class ConfigSpec extends UnitSpec {
       }
 
       "convert to the correct ConfigString" in {
-        //  println(config.toConfigString)
-        assert(config.toConfigString == "cli (\n stringValue = \"string\"\n intValue = 1\n)\n")
+        assert(config.toConfigString == "cli (\n extra (\n  stringValue = \"string\"\n  intValue = 2\n )\n intValue = 1\n)\n")
       }
     }
 
@@ -304,7 +309,6 @@ class ConfigSpec extends UnitSpec {
       }
 
       "convert to the correct String" in {
-        println(config.toString)
         assert(config.toString == """{: root={root: cli ( extra ( stringValue="string" intValue=2 ) intValue=1 ) } }""")
       }
 
