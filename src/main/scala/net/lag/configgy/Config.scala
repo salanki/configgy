@@ -112,6 +112,7 @@ class Config extends ConfigMap {
   private val subscribers = new SubscriptionNode
   private val subscriberKeys = new mutable.HashMap[Int, (SubscriptionNode, Subscriber)]
   private var nextKey = 1
+  var aliases: List[String] = Nil
 
   private var jmxNodes: List[String] = Nil
   private var jmxPackageName: String = ""
@@ -274,7 +275,7 @@ class Config extends ConfigMap {
   }
 
   // -----  implement AttributeMap by wrapping our root object:
-
+  def getConfigValue(key: String): Option[ConfigValue] = root.getConfigValue(key)
   def getString(key: String): Option[String] = root.getString(key)
   def getConfigMap(key: String): Option[ConfigMap] = root.getConfigMap(key)
   def configMap(key: String): ConfigMap = root.configMap(key)
@@ -286,7 +287,7 @@ class Config extends ConfigMap {
   def contains(key: String): Boolean = root.contains(key)
   def remove(key: String): Boolean = root.remove(key)
   def keys: Iterator[String] = root.keys
-  def asMap(): Map[String, String] = root.asMap()
+  def asMap(): Map[String, ConfigValue] = root.asMap()
   def toConfigString = root.toConfigString
   def copy(): ConfigMap = root.copy()
   def copyInto[T <: ConfigMap](m: T): T = root.copyInto(m)

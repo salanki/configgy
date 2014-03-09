@@ -20,6 +20,8 @@ import java.net.InetAddress
 import scala.collection.{immutable, mutable}
 import scala.collection.JavaConversions
 
+import configvalue._
+
 /**
  * A ConfigMap that wraps the system environment. This is used as a
  * fallback when looking up "$(...)" substitutions in config files.
@@ -48,6 +50,7 @@ private[configgy] object EnvironmentAttributes extends ConfigMap {
     getSystemProperties().get(key).orElse(env.get(key))
   }
 
+  def getConfigValue(key: String): Option[ConfigValue] = throw new Exception("not implemented")
   def getConfigMap(key: String): Option[ConfigMap] = None
   def configMap(key: String): ConfigMap = error("not implemented")
 
@@ -56,6 +59,7 @@ private[configgy] object EnvironmentAttributes extends ConfigMap {
     case Some(x) => Array[String](x)
   }
 
+  def setConfigValue(key: String, value: ConfigValue) = error("read-only attributes")
   def setString(key: String, value: String): Unit = error("read-only attributes")
   def setList(key: String, value: Seq[String]): Unit = error("read-only attributes")
   def setConfigMap(key: String, value: ConfigMap): Unit = error("read-only attributes")
@@ -66,7 +70,7 @@ private[configgy] object EnvironmentAttributes extends ConfigMap {
 
   def remove(key: String): Boolean = error("read-only attributes")
   def keys: Iterator[String] = (getSystemProperties().keySet ++ env.keySet).iterator
-  def asMap(): Map[String, String] = error("not implemented")
+  def asMap(): Map[String, ConfigValue] = error("not implemented")
   def toConfigString = error("not implemented")
   def subscribe(subscriber: Subscriber): SubscriptionKey = error("not implemented")
   def copy(): ConfigMap = this

@@ -16,8 +16,7 @@
 
 package net.lag.configgy
 
-import java.io.{BufferedReader, File, FileInputStream, InputStream, InputStreamReader}
-
+import java.io.{ BufferedReader, File, FileInputStream, InputStream, InputStreamReader }
 
 /**
  * An interface for finding config files and reading them into strings for
@@ -70,7 +69,6 @@ trait Importer {
   }
 }
 
-
 /**
  * An Importer that looks for imported config files in the filesystem.
  * This is the default importer.
@@ -78,7 +76,7 @@ trait Importer {
 class FilesystemImporter(val baseFolder: String) extends Importer {
   def importFile(filename: String, required: Boolean): String = {
     var f = new File(filename)
-    if (! f.isAbsolute) {
+    if (!f.isAbsolute) {
       f = new File(baseFolder, filename)
     }
     if (!required && !f.exists) {
@@ -87,12 +85,11 @@ class FilesystemImporter(val baseFolder: String) extends Importer {
       try {
         scala.io.Source.fromFile(f).mkString
       } catch {
-        case x:Exception => throw new ParseException(x.toString)
+        case x: Exception => throw new ParseException(x.toString)
       }
     }
   }
 }
-
 
 /**
  * An Importer that looks for imported config files in the java resources
@@ -101,18 +98,17 @@ class FilesystemImporter(val baseFolder: String) extends Importer {
 class ResourceImporter(classLoader: ClassLoader) extends Importer {
   def importFile(filename: String, required: Boolean): String = {
     try {
-      val stream = classLoader.getResourceAsStream(filename)
+      val stream = classLoader.getResource(filename)
       if (stream eq null) {
         if (required) {
           throw new ParseException("Can't find resource: " + filename)
         }
         ""
       } else {
-        throw new RuntimeException("This probably broke when upgrading to Scala 2.10")
-        streamToString(stream)
+        scala.io.Source.fromFile(stream.toURI()).mkString
       }
     } catch {
-      case x:Exception => throw new ParseException(x.toString)
+      case x: Exception => throw new ParseException(x.toString)
     }
   }
 }

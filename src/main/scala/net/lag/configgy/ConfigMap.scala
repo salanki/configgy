@@ -18,10 +18,14 @@ package net.lag.configgy
 
 import scala.collection.Map
 import scala.util.Sorting
-
+import configvalue._
 
 class ConfigException(reason: String) extends Exception(reason)
 
+object ConfigMap {
+  val TRUE = "true"
+  val FALSE = "false"
+}
 
 /**
  * Abstract trait for a map of string keys to strings, string lists, or (nested) ConfigMaps.
@@ -29,11 +33,21 @@ class ConfigException(reason: String) extends Exception(reason)
  * strings in the process.
  */
 trait ConfigMap {
-  private val TRUE = "true"
-  private val FALSE = "false"
-
+  import ConfigMap.{ TRUE, FALSE }
 
   // -----  required methods
+
+  /**
+   * Lookup an entry in this map, and if it exists return it as a Config Value
+   * Nested attribute maps will return None, all other types will be transformed into the matching ConfigValue type
+   */
+  def configValue(key: String): Option[ConfigValue] = getConfigValue(key)
+  
+  /**
+   * Lookup an entry in this map, and if it exists return it as a Config Value
+   * Nested attribute maps will return None, all other types will be transformed into the matching ConfigValue type
+   */
+  def getConfigValue(key: String): Option[ConfigValue]
 
   /**
    * Lookup an entry in this map, and if it exists and can be represented
@@ -67,6 +81,15 @@ trait ConfigMap {
    * exist or is a nested ConfigMap, an empty sequence is returned.
    */
   def getList(key: String): Seq[String]
+
+  /**
+   * Set a key/value pair in this map. If an entry already existed with
+   * that key, it's replaced.
+   *
+   * @throws ConfigException if the key already refers to a nested
+   *     ConfigMap
+   */
+  def setConfigValue(key: String, value: ConfigValue): Unit
 
   /**
    * Set a key/value pair in this map. If an entry already existed with
@@ -116,7 +139,7 @@ trait ConfigMap {
    * and values from this AttributeMap. Keys from nested maps will be
    * compound (like `"inner.name"`).
    */
-  def asMap(): Map[String, String]
+  def asMap(): Map[String, ConfigValue]
 
   /**
    * Subscribe to changes on this map. Any changes (including deletions)
@@ -147,7 +170,6 @@ trait ConfigMap {
    * Return any ConfigMap that is used as a fall back on lookups.
    */
   def inherits: List[Attributes]
-
 
   // -----  convenience methods
 
@@ -318,7 +340,7 @@ trait ConfigMap {
    */
   def subscribe(f: (Option[ConfigMap]) => Unit): SubscriptionKey = {
     subscribe(new Subscriber {
-      def validate(current: Option[ConfigMap], replacement: Option[ConfigMap]): Unit = { }
+      def validate(current: Option[ConfigMap], replacement: Option[ConfigMap]): Unit = {}
       def commit(current: Option[ConfigMap], replacement: Option[ConfigMap]): Unit = {
         f(replacement)
       }
@@ -381,6 +403,9 @@ trait ConfigMap {
 
   /** Equivalent to `getBool(key, defaultValue)`. */
   def apply(key: String, defaultValue: Boolean) = getBool(key, defaultValue)
+
+  /** Equivalent to `setConfigValue(key, value)`. */
+  def update(key: String, value: ConfigValue) = setConfigValue(key, value)
 
   /** Equivalent to `setString(key, value)`. */
   def update(key: String, value: String) = setString(key, value)
