@@ -18,7 +18,7 @@ object ConfigConverter {
   }
 
   implicit object LongConfigConverter extends ConfigConverter[Long] {
-    def convertToConfig(a: Long) = ConfigLong(a)
+    def convertToConfig(a: Long) = ConfigInt(a)
   }
 
   implicit object IntConfigConverter extends ConfigConverter[Int] {

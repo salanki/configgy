@@ -489,6 +489,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
       value match {
         case StringCell(x) => attr(key) = x
         case StringListCell(x) => attr(key) = x
+        case ConfigValueCell(x) => attr(key) = x
         case AttributesCell(x) => attr.setConfigMap(key, x.copy())
       }
     }

@@ -8,6 +8,4 @@ package object configvalue {
   implicit class ToStringList[A: StringListConverter](x: A) {
     def toStringList = StringListConverter.convert(x)
   }
-  
-  implicit def ConfigInt2ConfigLong(x: ConfigInt): ConfigLong = x.toLong
 }

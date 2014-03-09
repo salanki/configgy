@@ -114,7 +114,7 @@ class ConfigSpec extends UnitSpec {
           assert(config.getString("objLISt") == None)
         }
 
-        "convert to a config string" in {
+        "convert to a ConfigString" in {
           assert(config.toConfigString == "objList = [{intValue = 1 stringValue = \"b\"}]]\n")
         }
       }
@@ -138,13 +138,13 @@ class ConfigSpec extends UnitSpec {
         testObjectList(config)
       }
     }
-    
+
     "working with a list of ConfigObjects inside a ConfigOBject" when {
       def test(config: ConfigMap) = {
-        "have one key" in  {
-        assert(config.keys.size == 1)
+        "have one key" in {
+          assert(config.keys.size == 1)
         }
-        
+
         "have the list set in the object" in {
           config.getConfigValue("d") match {
             case Some(ConfigObject(a)) => a.get("h") match {
@@ -158,12 +158,24 @@ class ConfigSpec extends UnitSpec {
 
       "read from a string" should {
         lazy val config = Config.fromString("d = {h = [{a = 1}]}")
-        
+
         "parse the string" in {
           config
         }
-        
+
         test(config)
+      }
+    }
+
+    "loading a List of an integer, a boolean and a string inside a ConfigOBject" should {
+      val config = Config.fromString("a = { b = [1,true,\"str\"]}")
+
+      "have one key" in {
+        assert(config.keys.size == 1)
+      }
+      
+      "have the correct values and types" in {
+        assert(config.configValue("a") == Some(ConfigObject(Map("b" -> ConfigList(ConfigInt(1), ConfigBoolean(true), ConfigString("str"))))))
       }
     }
 
@@ -231,7 +243,6 @@ class ConfigSpec extends UnitSpec {
       }
 
       "convert to the correct String" in {
-        println(config.toString )
         assert(config.toString == """{: cli ( stringValue="string" intValue=1 ) }""")
       }
 
@@ -268,8 +279,47 @@ class ConfigSpec extends UnitSpec {
       }
 
       "convert to the correct ConfigString" in {
-      //  println(config.toConfigString)
+        //  println(config.toConfigString)
         assert(config.toConfigString == "cli (\n stringValue = \"string\"\n intValue = 1\n)\n")
+      }
+    }
+
+    "working with an alias group with two alias levels inside a map" should {
+      lazy val config = Config.fromString("root { cli ( intValue = 1\n extra (stringValue = \"string\" intValue = 2)) }")
+
+      "parse a string with aliases" in {
+        config
+      }
+
+      "have one key" in {
+        assert(config.keys.size == 1)
+      }
+
+      "return the correct first integer value" in {
+        assert(config.getInt("root.cli-intValue") == Some(1))
+      }
+
+      "return the correct second integer value" in {
+        assert(config.getInt("root.cli-extra-intValue") == Some(2))
+      }
+
+      "convert to the correct String" in {
+        println(config.toString)
+        assert(config.toString == """{: root={root: cli ( extra ( stringValue="string" intValue=2 ) intValue=1 ) } }""")
+      }
+
+      "convert to the correct ConfigString" in {
+        assert(config.toConfigString == """root {
+  cli (
+   extra (
+    stringValue = "string"
+    intValue = 2
+   )
+   intValue = 1
+  )
+}
+
+""")
       }
     }
 

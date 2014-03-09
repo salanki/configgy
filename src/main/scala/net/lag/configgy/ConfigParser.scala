@@ -121,14 +121,24 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
   }
 
   def objectAssign(k: String, v: Any) = v match {
-    case x: Int => updateObject(k, x.toConfig)
-    case x: Long => updateObject(k, x.toConfig)
-    case x: Double => updateObject(k, x.toConfig)
-    case x: String => updateObject(k, x.toConfig)
-    case x: Array[String] => updateObject(k, ConfigList(x.toList.map(stringToConfigValue))) /* TODO: Always converting strings to Int might not be a good idea */
-    case x: Boolean => updateObject(k, x.toConfig)
     case ObjectOpen => objectStack = (k, ConfigObject()) :: objectStack
+    case other =>
+      val mapper = primitiveMapper orElse specialMapper
+      updateObject(k, mapper(other))
   }
+
+  private val specialMapper: PartialFunction[Any, ConfigValue] = {
+    case x: Array[_] => ConfigList(x.toList.map(primitiveMapper))
+  }
+
+  private val primitiveMapper: PartialFunction[Any, ConfigValue] =
+    _ match {
+      case x: Int => x.toConfig
+      case x: Long => x.toConfig
+      case x: Double => x.toConfig
+      case x: String => x.toConfig
+      case x: Boolean => x.toConfig
+    }
 
   def regularAssign(k: String, a: String, v: Any) = if (a match {
     case "=" => true
@@ -137,7 +147,7 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
     case x: Int => attr(prefix + aliased(k)) = x
     case x: Long => attr(prefix + aliased(k)) = x
     case x: String => attr(prefix + aliased(k)) = x
-    case x: Array[String] => attr(prefix + aliased(k)) = x
+    case x: Array[_] => attr(prefix + aliased(k)) = x.map(_.toString)
     case x: Boolean => attr(prefix + aliased(k)) = x
     case ObjectOpen => objectStack = (prefix + aliased(k), ConfigObject()) :: Nil
   }
@@ -264,7 +274,7 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
       }
   }
   def string = stringToken ^^ { s => attr.interpolate(prefix, s.substring(1, s.length - 1).unquoteC) }
-  def stringList = "[" ~> repsep(string | numberToken, opt(",")) <~ (opt(",") ~ "]") ^^ { list => list.toArray }
+  def stringList = "[" ~> repsep(string | number | trueFalse, opt(",")) <~ (opt(",") ~ "]") ^^ { list => list.toArray }
   def trueFalse: Parser[Boolean] = ("(true|on)".r ^^ { x => true }) | ("(false|off)".r ^^ { x => false })
   def objectListOpenBrace: Parser[ObjectOpen.type] = "[{" ^^ { x =>
     debug(s"Object List Open Brace: $objectList on objStack: $objectStack")
@@ -283,11 +293,9 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
     openObject()
   }
 
-  private def stringToConfigValue(s: String) = StringCell(s).toConfig
-
   def parse(in: String): Unit = {
     parseAll(root, in) match {
-      case Success(result, _) => result
+      case Success(result, _) => 
       case x @ Failure(msg, z) => throw new ParseException(x.toString)
       case x @ Error(msg, _) => throw new ParseException(x.toString)
     }

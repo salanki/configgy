@@ -22,9 +22,6 @@ object ConfigList {
 case class ConfigList[+A <: ConfigValue](entries: List[A]) extends ConfigValue
 
 case class ConfigString(value: String) extends ConfigValue
-case class ConfigInt(value: Int) extends ConfigValue {
-  def toLong = ConfigLong(value.toLong)
-}
-case class ConfigLong(value: Long) extends ConfigValue
+case class ConfigInt(value: Long) extends ConfigValue
 case class ConfigDouble(value: Double) extends ConfigValue
 case class ConfigBoolean(value: Boolean) extends ConfigValue
