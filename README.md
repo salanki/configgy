@@ -5,7 +5,7 @@ Configgy is a library for handling config files for a scala
 daemon. The idea is that it should be simple and straightforward, allowing
 you to plug it in and get started quickly.
 
-This repository offers a further developed version of Robeys [original deprecated version](https://github.com/robey/configgy).
+This repository offers a further developed version of Robeys [original deprecated version](https://github.com/robey/configgy/tree/scala-2.9).
 
 ## Modifications made to the original Configgy
 ### Added multiple inheritance:
