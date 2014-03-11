@@ -7,6 +7,13 @@ object IntExtractor {
     } catch {
       case _: NumberFormatException => None
     }
+
+  def unapply(x: Long): Option[Int] =
+    try {
+      Some(x.toInt)
+    } catch {
+      case _: NumberFormatException => None
+    }
 }
 
 object LongExtractor {

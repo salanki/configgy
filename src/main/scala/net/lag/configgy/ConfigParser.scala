@@ -16,6 +16,7 @@
 
 package net.lag.configgy
 
+import scala.annotation._, elidable._
 import scala.collection.mutable.Stack
 import scala.collection.immutable.TreeMap
 import scala.util.parsing.combinator._
@@ -50,7 +51,7 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
 
   var aliasStack: List[String] = Nil
 
-  def debug(x: String) = println(x)
+   @elidable(FINE) def debug(x: String) = println(x)
 
   // tokens
   override val whiteSpace = """(\s+|#[^\n]*\n)+""".r
