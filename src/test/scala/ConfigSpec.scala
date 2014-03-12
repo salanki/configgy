@@ -116,13 +116,19 @@ class ConfigSpec extends UnitSpec {
 
         "convert to a ConfigString" in {
           assert(config.toConfigString == """objList = [
-  {,
-    intValue = 1,
-    stringValue = "b",
-  },
+  {
+    intValue = 1
+    stringValue = "b"
+  }
 ]
 """)
         }
+        
+        "parse the output of the ConfigString as a new config" in {
+          println(config.toConfigString)
+          Config.fromString(config.toConfigString)
+        }
+
       }
 
       "set via the API" should {
@@ -145,7 +151,7 @@ class ConfigSpec extends UnitSpec {
       }
     }
 
-    "working with a list of ConfigObjects inside a ConfigOBject" when {
+    "working with a list of ConfigObjects inside a ConfigObject" when {
       def test(config: ConfigMap) = {
         "have one key" in {
           assert(config.keys.size == 1)
@@ -160,10 +166,25 @@ class ConfigSpec extends UnitSpec {
             case other => assert(other == "Some(ConfigObject(_))")
           }
         }
+
+        "convert to the correct ConfigString" in {
+          val expected = """d = {
+  h = [
+    {
+      a = 1
+    },
+    {
+      b = 2
+    }
+  ]
+}
+"""
+          assert(config.toConfigString == expected)
+        }
       }
 
       "read from a string" should {
-        lazy val config = Config.fromString("d = {h = [{a = 1}]}")
+        lazy val config = Config.fromString("d = {h = [{a = 1}, {b = 2}]}")
 
         "parse the string" in {
           config
@@ -179,7 +200,7 @@ class ConfigSpec extends UnitSpec {
       "have one key" in {
         assert(config.keys.size == 1)
       }
-      
+
       "have the correct values and types" in {
         assert(config.configValue("a") == Some(ConfigObject(Map("b" -> ConfigList(ConfigInt(1), ConfigBoolean(true), ConfigString("str"))))))
       }

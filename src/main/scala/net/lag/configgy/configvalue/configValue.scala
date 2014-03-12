@@ -44,9 +44,13 @@ case class ConfigList[+A <: ConfigValue](entries: List[A]) extends ConfigValue {
       case x if x.size < 4 && subLists.find(_.size > 1) == None =>
         ("[" + subLists.map(_.head).mkString(", ") + "]") :: Nil // ??
       case x =>
-        val out = for (a <- x; b <- a.toConfigStringList) yield s"  $b,"
+        val out = for { 
+          a <- x
+          ls = a.toConfigStringList
+          b <- ls.updated(ls.length-1, ls.last+",")
+        } yield s"  $b"
         "[" ::
-          out :::
+          out.updated(out.length-1, out.last.init) :::
           "]" :: Nil
     }
   }
