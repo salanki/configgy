@@ -277,7 +277,7 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
   def string = stringToken ^^ { s => attr.interpolate(prefix, s.substring(1, s.length - 1).unquoteC) }
   def stringList = "[" ~> repsep(string | number | trueFalse, opt(",")) <~ (opt(",") ~ "]") ^^ { list => list.toArray }
   def trueFalse: Parser[Boolean] = ("(true|on)".r ^^ { x => true }) | ("(false|off)".r ^^ { x => false })
-  def objectListOpenBrace: Parser[ObjectOpen.type] = "[{" ^^ { x =>
+  def objectListOpenBrace: Parser[ObjectOpen.type] = "[" ~> opt(whiteSpace) ~> "{" ^^ { x =>
     debug(s"Object List Open Brace: $objectList on objStack: $objectStack")
 
     objectList foreach (objectListStash ::= _)
