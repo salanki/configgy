@@ -15,7 +15,7 @@ organization := "net.lag"
 scalaVersion := "2.10.3"
 
 libraryDependencies ++= Seq(
- "com.twitter" % "json_2.8.1" % "2.1.6",
+// "com.twitter" % "json_2.8.1" % "2.1.6",
  "de.congrace" % "exp4j" % "0.3.8"
 )
 
