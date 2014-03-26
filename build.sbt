@@ -1,10 +1,10 @@
-import CoverallsPlugin.CoverallsKeys._
+//import CoverallsPlugin.CoverallsKeys._
 
 ScoverageSbtPlugin.instrumentSettings
 
 CoverallsPlugin.coverallsSettings
 
-coverallsTokenFile := "token.txt"
+//coverallsTokenFile := "token.txt"
 
 name := "Configgy"
 
