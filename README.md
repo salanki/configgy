@@ -1,5 +1,4 @@
-CONFIGGY
-========
+[![Coverage Status](https://coveralls.io/repos/salanki/configgy/badge.png?branch=master)](https://coveralls.io/r/salanki/configgy?branch=master)
 
 Configgy is a library for handling config files for a scala
 daemon. The idea is that it should be simple and straightforward, allowing
