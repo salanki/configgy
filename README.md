@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/salanki/configgy.png?branch=master)](https://travis-ci.org/Versal/jellyfish)
 [![Coverage Status](https://coveralls.io/repos/salanki/configgy/badge.png?branch=master)](https://coveralls.io/r/salanki/configgy?branch=master)
 
 Configgy is a library for handling config files for a scala
