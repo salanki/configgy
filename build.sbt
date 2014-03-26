@@ -1,3 +1,11 @@
+import CoverallsPlugin.CoverallsKeys._
+
+ScoverageSbtPlugin.instrumentSettings
+
+CoverallsPlugin.coverallsSettings
+
+coverallsTokenFile := "token.txt"
+
 name := "Configgy"
 
 version := "2.1.0-SALANKI"
