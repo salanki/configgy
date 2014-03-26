@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/salanki/configgy/badge.png?branch=master)](https://coveralls.io/r/salanki/configgy?branch=master)
+
 CONFIGGY
 ========
 
