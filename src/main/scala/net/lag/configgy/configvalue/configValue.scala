@@ -12,8 +12,8 @@ sealed trait ConfigValue {
 }
 
 object ConfigObject {
-  def apply[A <: ConfigValue](map: Map[String, A]) = new ConfigObject(TreeMap[String, ConfigValue]()(CaseInsensitiveOrdering) ++ map)
-  def apply[A <: ConfigValue](map: (String, A)*) = new ConfigObject(TreeMap[String, ConfigValue]()(CaseInsensitiveOrdering) ++ map)
+  def apply[A <: ConfigValue](map: Map[String, A]) = new ConfigObject(TreeMap[String, A]()(CaseInsensitiveOrdering) ++ map)
+  def apply[A <: ConfigValue](map: (String, A)*) = new ConfigObject(TreeMap[String, A]()(CaseInsensitiveOrdering) ++ map)
   def apply() = new ConfigObject(TreeMap[String, ConfigValue]()(CaseInsensitiveOrdering))
 
 }

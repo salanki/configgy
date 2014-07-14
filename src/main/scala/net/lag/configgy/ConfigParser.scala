@@ -210,7 +210,7 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
 
   private def closeBlock(name: Option[String]) = {
     if (sections.isEmpty) {
-      println("dangling close tag")
+      throw new ParseException("Dangling close tag (}), make sure all your braces match up")
     } else {
       val last = sections.pop
       if (name.isDefined && last != name.get) {
