@@ -67,6 +67,10 @@ case class ConfigList[+A <: ConfigValue](entries: List[A]) extends ConfigValue w
   }
 }
 
+object ConfigString {
+    implicit val ordering: Ordering[ConfigString] = Ordering.by(_.value) // Moved to ConfigString in configgy? What did I mean by that?
+}
+
 case class ConfigString(value: String) extends ConfigValue {
   /**
    * A special equals that also matches a list with a single element to the same element without a list encapsulation.
@@ -80,6 +84,7 @@ case class ConfigString(value: String) extends ConfigValue {
   override def toString = "\"" + value + "\""
   def toConfigStringList = "\"" + value.quoteC + "\"" :: Nil
 }
+
 case class ConfigInt(value: Long) extends ConfigValue {
   /**
    * A special equals that also matches a list with a single element to the same element without a list encapsulation.
