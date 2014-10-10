@@ -68,7 +68,7 @@ case class ConfigList[+A <: ConfigValue](entries: List[A]) extends ConfigValue w
 }
 
 object ConfigString {
-    implicit val ordering: Ordering[ConfigString] = Ordering.by(_.value) // Moved to ConfigString in configgy? What did I mean by that?
+    implicit val ordering: Ordering[ConfigString] = Ordering.by(_.value)
 }
 
 case class ConfigString(value: String) extends ConfigValue {
