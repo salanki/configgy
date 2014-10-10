@@ -1,8 +1,5 @@
-//import CoverallsPlugin.CoverallsKeys._
-
-ScoverageSbtPlugin.instrumentSettings
-
-CoverallsPlugin.coverallsSettings
+import scoverage.ScoverageSbtPlugin.instrumentSettings
+import org.scoverage.coveralls.CoverallsPlugin.coverallsSettings
 
 //coverallsTokenFile := "token.txt"
 
@@ -12,13 +9,14 @@ version := "2.1.0-SALANKI"
 
 organization := "net.lag"
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.11.2"
 
 libraryDependencies ++= Seq(
- "de.congrace" % "exp4j" % "0.3.8"
+ "de.congrace" % "exp4j" % "0.3.8",
+ "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.2"
 )
 
-libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.1.0" % "test"
+libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 
 initialCommands := """
   import System.{currentTimeMillis => now}

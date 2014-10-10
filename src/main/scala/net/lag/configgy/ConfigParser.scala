@@ -59,7 +59,7 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
   val stringToken: Parser[String] = ("\"" + """([^\\\"]|\\[^ux]|\\\n|\\u[0-9a-fA-F]{4}|\\x[0-9a-fA-F]{2})*""" + "\"").r
   val identToken: Parser[String] = """([\da-zA-Z_][-\w]*)(\.[a-zA-Z_][-\w]*)*""".r
   val assignToken: Parser[String] = """=|\?=""".r
-  val tagNameToken: Parser[String] = """[a-zA-Z][-\w]*""".r
+  val tagNameToken: Parser[String] = """[0-9a-zA-Z][-\w]*""".r
 
   def root = rep(includeFile | includeOptFile | assignment | toggle | sectionOpen | sectionClose |
     sectionOpenBrace | sectionCloseBrace | listClose | listComma | aliasOpenParen | aliasCloseParen)
