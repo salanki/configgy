@@ -239,6 +239,14 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 
   def getList(key: String): Seq[String] = {
     lookupCell(key) match {
+      case Some(ConfigValueCell(ConfigList(x))) => {
+        x.map {
+          _ match {
+            case ConfigString(z) => z /* ConfigStrings .toString quotes the string, so we need to handle it as special case */
+            case o => o.toString
+          }
+        }
+      }
       case Some(ConfigValueCell(ConfigList(a @ List(ConfigString(x), _*)))) => a.asInstanceOf[List[ConfigString]].map(_.value)
       case Some(StringListCell(x)) => x
       case Some(StringCell(x)) => Array[String](x)

@@ -129,7 +129,7 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
   }
 
   private val specialMapper: PartialFunction[Any, ConfigValue] = {
-    case x: Array[_] => ConfigList(x.toList.map(primitiveMapper))
+    case x: ConfigList[_] => x
   }
 
   private val primitiveMapper: PartialFunction[Any, ConfigValue] =
@@ -150,6 +150,7 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
     case x: String => attr(prefix + aliased(k)) = x
     case x: Array[_] => attr(prefix + aliased(k)) = x.map(_.toString)
     case x: Boolean => attr(prefix + aliased(k)) = x
+    case x: ConfigList[_] => attr(prefix + aliased(k)) = x
     case ObjectOpen => objectStack = (prefix + aliased(k), ConfigObject()) :: Nil
   }
 
@@ -275,7 +276,7 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
       }
   }
   def string = stringToken ^^ { s => attr.interpolate(prefix, s.substring(1, s.length - 1).unquoteC) }
-  def stringList = "[" ~> repsep(string | number | trueFalse, opt(",")) <~ (opt(",") ~ "]") ^^ { list => list.toArray }
+  def stringList = "[" ~> repsep(string | number | trueFalse, opt(",")) <~ (opt(",") ~ "]") ^^ { list => ConfigList(list.map(primitiveMapper)) }
   def trueFalse: Parser[Boolean] = ("(true|on)".r ^^ { x => true }) | ("(false|off)".r ^^ { x => false })
   def objectListOpenBrace: Parser[ObjectOpen.type] = "[" ~> opt(whiteSpace) ~> "{" ^^ { x =>
     debug(s"Object List Open Brace: $objectList on objStack: $objectStack")

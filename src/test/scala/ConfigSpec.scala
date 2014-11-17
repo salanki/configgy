@@ -79,11 +79,11 @@ class ConfigSpec extends UnitSpec {
     "working with a list of strings" should {
       val config = new Config
 
-      "set an list of string" in {
+      "set a list of string" in {
         config.setList("intValue", List("a", "b"))
       }
 
-      "return the correct string list value" in {
+      "return the correct strings list value" in {
         assert(config.getList("intValue").toList == List("a", "b"))
       }
 
@@ -97,6 +97,43 @@ class ConfigSpec extends UnitSpec {
 
       "return the None if the string is requested as an Integer" in {
         assert(config.getInt("intValuE") == None)
+      }
+    }
+    
+    
+    "working with a list of strings set from a configvalue" should {
+      val config = new Config
+
+      "set a list of strings" in {
+        config.setConfigValue("intValue", List("Channel 1/2,monitor", "Channel 1/1,monitor").toConfig)
+      }
+
+      "return the correct strings list value" in {
+        assert(config.getList("intValue").toList == List("Channel 1/2,monitor", "Channel 1/1,monitor"))
+      }
+
+      "return a ConfigList of ConfigStrings if the StringList is requested as a ConfigValue" in {
+        assert(config.getConfigValue("intValuE") == Some(ConfigList(ConfigString("Channel 1/2,monitor"), ConfigString("Channel 1/1,monitor"))))
+      }
+
+      "return the None if the string is requested as an Integer" in {
+        assert(config.getInt("intValuE") == None)
+      }
+    }
+    
+    "reading a list of integers from a string" should {
+      lazy val config = Config.fromString("test = [1,2]")
+
+      "return a list of strings on getList" in {
+        assert(config.getList("test").toList == List("1", "2"))
+      }
+
+      "return a ConfigList of ConfigInts if the IntList is requested as a ConfigValue" in {
+        assert(config.getConfigValue("test") == Some(ConfigList(ConfigInt(1), ConfigInt(2))))
+      }
+
+      "return the None if the string is requested as boolean" in {
+        assert(config.getBool("intValuE") == None)
       }
     }
 
