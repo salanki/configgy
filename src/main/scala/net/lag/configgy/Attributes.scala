@@ -202,7 +202,10 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
 
   def getString(key: String): Option[String] = {
     lookupCell(key) match {
-      case Some(ConfigValueCell(ConfigString(x))) => Some(x)
+      case Some(ConfigValueCell(ConfigString(x))) => Some(x.toString)
+      case Some(ConfigValueCell(ConfigBoolean(x))) => Some(x.toString)
+      case Some(ConfigValueCell(ConfigInt(x))) => Some(x.toString)
+      case Some(ConfigValueCell(ConfigDouble(x))) => Some(x.toString)
       case Some(StringCell(x)) => Some(x)
       case Some(StringListCell(x)) => Some(x.toList.mkString("[", ",", "]"))
       case _ => None

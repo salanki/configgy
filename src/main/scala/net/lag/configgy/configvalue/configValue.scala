@@ -88,9 +88,11 @@ case class ConfigString(value: String) extends ConfigValue {
 case class ConfigInt(value: Long) extends ConfigValue {
   /**
    * A special equals that also matches a list with a single element to the same element without a list encapsulation.
+   * It will also match ConfigDoubles if the values are the same
    */
   override def equals(other: Any) = other match {
     case that: ConfigInt => this.value == that.value
+    case that: ConfigDouble => this.value == that.value
     case that: ConfigList[_] if that.entries.length == 1 => that.entries.head == this
     case _ => false
   }
@@ -101,9 +103,11 @@ case class ConfigInt(value: Long) extends ConfigValue {
 case class ConfigDouble(value: Double) extends ConfigValue {
   /**
    * A special equals that also matches a list with a single element to the same element without a list encapsulation.
+   *  It will also match ConfigInts if the values are the same
    */
   override def equals(other: Any) = other match {
     case that: ConfigDouble => this.value == that.value
+    case that: ConfigInt => this.value == that.value
     case that: ConfigList[_] if that.entries.length == 1 => that.entries.head == this
     case _ => false
   }
