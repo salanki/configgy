@@ -234,7 +234,7 @@ private[configgy] class ConfigParser(var attr: Attributes, val importer: Importe
             case None =>
               /* Last object in stack, time to assign to attribute */
               debug(s"Setting: $name = " + head)
-              attr(aliased(name)) = head
+              attr(/*aliased(name)*/ name) = head
             case Some((_, Nil)) =>
               debug("Adding to list first: " + head)
               objectList = Some(name, head :: Nil)

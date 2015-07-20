@@ -6,6 +6,7 @@ import configvalue._
 abstract class UnitSpec extends WordSpec with Matchers
 
 class ConfigSpec extends UnitSpec {
+
   "A Config" when {
     "loading an empty string" should {
       val config = Config.fromString("")
@@ -157,8 +158,7 @@ class ConfigSpec extends UnitSpec {
     intValue = 1
     stringValue = "b"
   }
-]
-""")
+]""")
         }
         
         "parse the output of the ConfigString as a new config" in {
@@ -214,8 +214,7 @@ class ConfigSpec extends UnitSpec {
       b = 2
     }
   ]
-}
-"""
+}"""
           assert(config.toConfigString == expected)
         }
       }
@@ -271,7 +270,7 @@ class ConfigSpec extends UnitSpec {
       }
 
       "convert to the correct ConfigString" in {
-        assert(config.toConfigString == "stringValue = \"string\"\nintValue = 1\n")
+        assert(config.toConfigString == "stringValue = \"string\"\nintValue = 1")
       }
     }
 
@@ -311,7 +310,56 @@ class ConfigSpec extends UnitSpec {
       }
 
       "convert to the correct ConfigString" in {
-        assert(config.toConfigString == "cli (\n stringValue = \"string\"\n intValue = 1\n)\n")
+        assert(config.toConfigString == "cli (\n stringValue = \"string\"\n intValue = 1\n)")
+      }
+    }
+
+  "working with an alias group with a configObject inside the alias" should {
+    lazy val config = Config.fromString("system {\n cli (\n pl_eng = {password = \"asd\" readbm = \"9223372036854775807\" writebm = \"0\" survbm = \"9223372036854775807\"}\n  )\n } ")
+
+    "parse a string with aliases" in {
+H      config
+    }
+
+    "have a correctly named configMap with one entry" in {
+      assert(config.getConfigMap("system").get.asMap.size == 1)
+    }
+
+    "have the value at the right place in the map" in {
+      assert(config.getConfigValue("system.cli-pl_eng").isDefined)
+    }
+
+    "convert to the correct ConfigString" in {
+      assert(config.toConfigString == "system {\n  cli (\n   pl_eng = {\n     password = \"asd\"\n     readbm = \"9223372036854775807\"\n     survbm = \"9223372036854775807\"\n     writebm = \"0\"\n   }\n  )\n}\n")
+    }
+  }
+
+    "working with an alias group with a configObject inside a config object inside the alias" should {
+      lazy val config = Config.fromString("system {\n level {\n more {\n cli (\n pl_eng = {password = \"asd\" read = {\n test = \"good\" \n}\n writebm = \"0\" survbm = \"9223372036854775807\"}\n  )\n }\n }\n }")
+
+      "parse a string with aliases" in {
+        config
+      }
+
+      "have a correctly named configMap with one entry (outer)" in {
+        assert(config.getConfigMap("system").get.asMap.size == 1)
+      }
+
+      "have a correctly named configMap with one entry (inner)" in {
+        assert(config.getConfigMap("system.level").get.asMap.size == 1)
+      }
+
+
+      "have a correctly named configMap with one entry (more)" in {
+        assert(config.getConfigMap("system.level.more").get.asMap.size == 1)
+      }
+
+      "have the value at the right place in the map" in {
+        assert(config.getConfigValue("system.level.more.cli-pl_eng").isDefined)
+      }
+
+      "convert to the correct ConfigString" in {
+        assert(config.toConfigString == "system {\n  level {\n    more {\n      cli (\n       pl_eng = {\n         password = \"asd\"\n         read = {\n           test = \"good\"\n         }\n         survbm = \"9223372036854775807\"\n         writebm = \"0\"\n       }\n      )\n    }\n    \n  }\n  \n}\n")
       }
     }
 
@@ -343,7 +391,7 @@ class ConfigSpec extends UnitSpec {
       }
 
       "convert to the correct ConfigString" in {
-        assert(config.toConfigString == "cli (\n extra (\n  stringValue = \"string\"\n  intValue = 2\n )\n intValue = 1\n)\n")
+        assert(config.toConfigString == "cli (\n extra (\n  stringValue = \"string\"\n  intValue = 2\n )\n intValue = 1\n)")
       }
     }
 
@@ -380,7 +428,6 @@ class ConfigSpec extends UnitSpec {
    intValue = 1
   )
 }
-
 """)
       }
     }
@@ -403,4 +450,5 @@ class ConfigSpec extends UnitSpec {
       assert(c.configMap("fruit").getName == "fruit")
     }
   }
+
 }

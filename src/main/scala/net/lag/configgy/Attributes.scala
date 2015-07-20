@@ -375,7 +375,7 @@ private[configgy] class Attributes(val config: Config, val name: String) extends
   }
 
   def toConfigString: String = {
-    toConfigList().mkString("", "\n", "\n")
+    toConfigList().mkString("", "\n", "")
   }
 
   private def toConfigList(): List[String] = {
